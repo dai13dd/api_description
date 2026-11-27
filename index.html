@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Web APIってなに？ - ノーコード開発者のための超入門</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & Noto Sans JP -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Noto Sans JP"', '"Inter"', 'sans-serif'],
+          },
+          colors: {
+            brandBlue: '#3b82f6',
+            brandIndigo: '#6366f1',
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    /* スライド切り替えアニメーション */
+    .slide {
+      display: none;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+    .slide.active {
+      display: flex;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* 3枚目：アニメーションハイライト用のスタイル */
+    .flow-node {
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .flow-node.highlight {
+      transform: scale(1.04);
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.35), 0 10px 25px -5px rgba(59, 130, 246, 0.4);
+      border-color: #2563eb !important;
+      background-color: #eff6ff !important;
+      z-index: 10;
+    }
+    .flow-node-api.highlight {
+      transform: scale(1.03);
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.35), 0 10px 25px -5px rgba(99, 102, 241, 0.4);
+      border-color: #4f46e5 !important;
+      background-color: #eef2ff !important;
+      z-index: 10;
+    }
+    .flow-arrow-svg {
+      transition: all 0.35s ease;
+    }
+    .flow-arrow-svg.highlight {
+      transform: scale(1.06);
+      filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.65));
+    }
+    .flow-arrow-svg.highlight path {
+      fill: #2563eb;
+      stroke: #1d4ed8;
+    }
+    .flow-arrow-svg.highlight text {
+      fill: #ffffff;
+    }
+    .flow-arrow-res.highlight {
+      transform: scale(1.06);
+      filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.65));
+    }
+    .flow-arrow-res.highlight path {
+      fill: #4f46e5;
+      stroke: #4338ca;
+    }
+    .flow-arrow-res.highlight text {
+      fill: #ffffff;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col justify-between antialiased selection:bg-blue-100 selection:text-blue-900">
+
+  <!-- 上部プログレスバー -->
+  <div class="w-full h-1.5 bg-slate-200 fixed top-0 left-0 z-50">
+    <div id="progressBar" class="h-full bg-gradient-to-r from-brandBlue to-brandIndigo transition-all duration-300" style="width: 20%;"></div>
+  </div>
+
+  <!-- メインプレゼン領域 -->
+  <main class="flex-1 flex items-center justify-center p-3 sm:p-6 md:p-8 pt-6">
+    <div id="slideContainer" class="w-full max-w-5xl bg-white rounded-3xl shadow-xl border border-slate-200/80 overflow-hidden relative min-h-[580px] sm:min-h-[620px] flex flex-col">
+
+      <!-- =========================================================
+           スライド 1：導入（結論ファースト）
+      ========================================================== -->
+      <section class="slide active flex-1 flex-col justify-center p-6 sm:p-12 md:p-16 relative overflow-hidden" data-slide="1">
+        <!-- 背景装飾 -->
+        <div class="absolute -top-24 -right-24 w-72 h-72 bg-blue-50 rounded-full blur-3xl opacity-80 pointer-events-none"></div>
+        <div class="absolute -bottom-24 -left-24 w-72 h-72 bg-indigo-50 rounded-full blur-3xl opacity-80 pointer-events-none"></div>
+
+        <div class="relative z-10 max-w-3xl mx-auto text-center space-y-6">
+          <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-brandBlue text-sm font-bold tracking-wide">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            ノーコード開発者のための超入門
+          </span>
+
+          <h1 class="text-4xl sm:text-5xl md:text-6xl font-black text-slate-900 tracking-tight leading-tight">
+            <span class="bg-clip-text text-transparent bg-gradient-to-r from-brandBlue to-brandIndigo">Web API</span>ってなに？
+          </h1>
+
+          <div class="bg-gradient-to-br from-slate-50 to-blue-50/60 border border-blue-100 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <p class="text-lg sm:text-2xl font-bold text-slate-800 leading-relaxed">
+              アプリの裏側で、面倒な処理をまとめて代行してくれる<br class="hidden sm:inline" />
+              <span class="inline-block mt-1 px-3 py-0.5 bg-brandBlue text-white rounded-lg shadow-sm">「専用の窓口」</span> です
+            </p>
+          </div>
+
+          <!-- レストランの例え（補足ポイント） -->
+          <div class="mt-6 bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 text-left shadow-sm flex flex-col sm:flex-row items-center gap-5">
+            <div class="w-16 h-16 shrink-0 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-brandIndigo">
+              <!-- 店員さん/トレイアイコン -->
+              <svg class="w-9 h-9" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" class="hidden"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 17h18M5 17a7 7 0 0114 0M12 7V5m-2 0h4" />
+              </svg>
+            </div>
+            <div>
+              <h2 class="text-base sm:text-lg font-bold text-slate-800 mb-1">
+                難しい専門用語は覚えなくてOK！
+              </h2>
+              <p class="text-sm sm:text-base text-slate-600 leading-relaxed">
+                レストランの<strong>「店員さん」</strong>をイメージしてください。お客さん（アプリ）が「これください」とお願いするだけで、裏側のキッチン（データベース）から必要なデータを用意して運んできてくれる存在です。
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================================
+           スライド 2：背景（なぜ必要なのか？）
+      ========================================================== -->
+      <section class="slide flex-1 flex-col justify-center p-6 sm:p-10 md:p-12" data-slide="2">
+        <div class="mb-6 sm:mb-8">
+          <span class="text-xs sm:text-sm font-bold uppercase tracking-wider text-brandBlue">02 / Why Web API?</span>
+          <h2 class="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 mt-1">
+            もしPower Appsだけで全部やろうとすると…
+          </h2>
+          <p class="text-sm sm:text-base text-slate-500 mt-2">
+            データベースへの直接接続や複雑なデータ処理をアプリ側だけで組むと、3つの壁にぶつかります。
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
+          <!-- 課題1 -->
+          <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 flex flex-col hover:border-blue-300 hover:shadow-md transition">
+            <div class="w-12 h-12 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center mb-4">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+              </svg>
+            </div>
+            <div class="text-xs font-bold text-rose-500 mb-1">課題 01</div>
+            <h3 class="text-lg font-bold text-slate-900 mb-2">設定が複雑になる</h3>
+            <p class="text-sm text-slate-600 leading-relaxed flex-1">
+              データの接続・検索・エラー処理などをノーコードの数式だけで組もうとすると、設定がどんどん複雑になり、本来の「画面づくり」に集中できなくなります。
+            </p>
+          </div>
+
+          <!-- 課題2 -->
+          <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 flex flex-col hover:border-blue-300 hover:shadow-md transition">
+            <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center mb-4">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div class="text-xs font-bold text-amber-600 mb-1">課題 02</div>
+            <h3 class="text-lg font-bold text-slate-900 mb-2">アプリが重くなる</h3>
+            <p class="text-sm text-slate-600 leading-relaxed flex-1">
+              大量のデータをアプリ側に読み込んでから集計・加工しようとすると、スマホやPC側への負荷が増え、画面の切り替えや動作が遅くなってしまいます。
+            </p>
+          </div>
+
+          <!-- 課題3 -->
+          <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 flex flex-col hover:border-blue-300 hover:shadow-md transition">
+            <div class="w-12 h-12 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center mb-4">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+              </svg>
+            </div>
+            <div class="text-xs font-bold text-purple-600 mb-1">課題 03</div>
+            <h3 class="text-lg font-bold text-slate-900 mb-2">使い回せない</h3>
+            <p class="text-sm text-slate-600 leading-relaxed flex-1">
+              別の部署向けアプリやExcelツールで「同じデータ」が欲しくなったとき、アプリの中に処理が埋め込まれていると、また一から作り直す羽目になります。
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-center justify-center gap-3 text-brandBlue font-bold text-sm sm:text-base">
+          <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+          <span>だからこそ、「画面」と「裏側の複雑な処理」を分ける <span class="underline decoration-2 underline-offset-4">Web API</span> が活躍します！</span>
+        </div>
+      </section>
+
+      <!-- =========================================================
+           スライド 3：仕組みの図解（メインページ）
+      ========================================================== -->
+      <section class="slide flex-1 flex-col justify-between p-5 sm:p-8 md:p-10" data-slide="3">
+        <!-- ヘッダー + アニメーションボタン -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <div>
+            <span class="text-xs font-bold uppercase tracking-wider text-brandBlue">03 / Architecture</span>
+            <h2 class="text-xl sm:text-2xl md:text-3xl font-extrabold text-slate-900">
+              Power AppsとWeb APIの役割分担
+            </h2>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <button id="playAnimBtn" type="button" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-brandBlue to-brandIndigo text-white text-sm font-bold shadow-md hover:shadow-lg hover:opacity-95 active:scale-95 transition cursor-pointer">
+              <svg id="playIcon" class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              <span id="playBtnText">アニメーション再生</span>
+            </button>
+            <button id="resetAnimBtn" type="button" disabled class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-700 text-sm font-bold shadow-sm hover:bg-slate-50 active:scale-95 disabled:opacity-40 disabled:pointer-events-none transition cursor-pointer" title="最初からやり直す">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              <span>最初から</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ステータス表示バー（アニメーション中の解説） -->
+        <div id="animStatus" class="mb-4 px-4 py-2 rounded-xl bg-slate-100 border border-slate-200 text-xs sm:text-sm text-slate-600 font-medium flex items-center gap-2 min-h-[38px]">
+          <span id="animStatusDot" class="w-2 h-2 rounded-full bg-brandBlue inline-block shrink-0"></span>
+          <span id="animStatusText">「アニメーション再生」を押すと、データの動きをステップごとに確認できます。</span>
+        </div>
+
+        <!-- メイン図解エリア（3カラム構成：左Power Apps、中央往復矢印、右Web API） -->
+        <div class="flex-1 flex items-center justify-center overflow-x-auto py-1">
+          <div class="w-full min-w-[680px] max-w-4xl grid grid-cols-12 gap-2 items-stretch">
+
+            <!-- 【左列】Power Apps 縦フロー（5カラム） -->
+            <div class="col-span-5 flex flex-col items-center">
+              <!-- 左列ヘッダー -->
+              <div class="w-full bg-blue-50 border-2 border-brandBlue rounded-xl py-2.5 px-3 text-center mb-3 shadow-sm">
+                <div class="text-sm sm:text-base font-extrabold text-blue-900">Power Apps</div>
+                <div class="text-xs text-blue-700 font-medium">（アプリ画面・メインの流れ）</div>
+              </div>
+
+              <!-- 1. スタート -->
+              <div id="node-start" class="flow-node w-44 py-2 px-4 rounded-full bg-white border-2 border-slate-300 text-center text-sm font-bold text-slate-800 shadow-sm">
+                スタート
+              </div>
+
+              <!-- 太い下向き矢印 -->
+              <div class="my-1 flex justify-center">
+                <svg class="w-7 h-6 text-indigo-400" viewBox="0 0 28 24" fill="none">
+                  <path d="M10 2H18V12H24L14 22L4 12H10V2Z" fill="#e0e7ff" stroke="#6366f1" stroke-width="2" stroke-linejoin="round"/>
+                </svg>
+              </div>
+
+              <!-- 2. ユーザー入力 -->
+              <div id="node-input" class="flow-node w-full max-w-[240px] py-2.5 px-4 rounded-xl bg-white border-2 border-slate-300 text-center text-sm font-bold text-slate-800 shadow-sm">
+                ユーザー入力
+              </div>
+
+              <!-- 太い下向き矢印 -->
+              <div class="my-1 flex justify-center">
+                <svg class="w-7 h-6 text-indigo-400" viewBox="0 0 28 24" fill="none">
+                  <path d="M10 2H18V12H24L14 22L4 12H10V2Z" fill="#e0e7ff" stroke="#6366f1" stroke-width="2" stroke-linejoin="round"/>
+                </svg>
+              </div>
+
+              <!-- 3. DBデータ取得（強調表示） -->
+              <div id="node-getdb" class="flow-node w-full max-w-[240px] py-3 px-4 rounded-xl bg-blue-50/80 border-2 border-brandBlue text-center shadow-md relative">
+                <div class="text-sm font-extrabold text-blue-950">DBデータ取得</div>
+                <div class="text-xs font-bold text-brandBlue mt-0.5">（APIを呼ぶだけ）</div>
+              </div>
+
+              <!-- 太い下向き矢印 -->
+              <div class="my-1 flex justify-center">
+                <svg class="w-7 h-6 text-indigo-400" viewBox="0 0 28 24" fill="none">
+                  <path d="M10 2H18V12H24L14 22L4 12H10V2Z" fill="#e0e7ff" stroke="#6366f1" stroke-width="2" stroke-linejoin="round"/>
+                </svg>
+              </div>
+
+              <!-- 4. データ加工 -->
+              <div id="node-process" class="flow-node w-full max-w-[240px] py-2.5 px-4 rounded-xl bg-white border-2 border-slate-300 text-center text-sm font-bold text-slate-800 shadow-sm">
+                データ加工
+              </div>
+
+              <!-- 太い下向き矢印 -->
+              <div class="my-1 flex justify-center">
+                <svg class="w-7 h-6 text-indigo-400" viewBox="0 0 28 24" fill="none">
+                  <path d="M10 2H18V12H24L14 22L4 12H10V2Z" fill="#e0e7ff" stroke="#6366f1" stroke-width="2" stroke-linejoin="round"/>
+                </svg>
+              </div>
+
+              <!-- 5. 出力 -->
+              <div id="node-output" class="flow-node w-44 py-2 px-4 rounded-full bg-white border-2 border-slate-300 text-center text-sm font-bold text-slate-800 shadow-sm">
+                出力
+              </div>
+            </div>
+
+            <!-- 【中央列】往復矢印（3カラム：DBデータ取得の真横に配置） -->
+            <div class="col-span-3 flex flex-col justify-center items-center pt-10">
+              <div class="w-full space-y-4">
+                <!-- ① お願い（右向き太矢印） -->
+                <div id="arrow-req" class="flow-arrow-svg w-full">
+                  <svg class="w-full h-12" viewBox="0 0 190 48" fill="none">
+                    <path d="M4 10H150V3L186 24L150 45V38H4V10Z" fill="#dbeafe" stroke="#3b82f6" stroke-width="2" stroke-linejoin="round"/>
+                    <text x="84" y="28" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e3a8a">① お願い（データ取得）</text>
+                  </svg>
+                </div>
+                <!-- ② 結果（左向き太矢印） -->
+                <div id="arrow-res" class="flow-arrow-svg flow-arrow-res w-full">
+                  <svg class="w-full h-12" viewBox="0 0 190 48" fill="none">
+                    <path d="M186 10H40V3L4 24L40 45V38H186V10Z" fill="#e0e7ff" stroke="#6366f1" stroke-width="2" stroke-linejoin="round"/>
+                    <text x="106" y="28" text-anchor="middle" font-size="11.5" font-weight="700" fill="#312e81">② 結果（データ返却）</text>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- 【右列】Web API ボックス（4カラム） -->
+            <div class="col-span-4 flex flex-col justify-center items-center pt-2">
+              <div class="w-full">
+                <!-- 右列ヘッダー -->
+                <div class="w-full bg-indigo-50 border-2 border-brandIndigo rounded-xl py-2.5 px-3 text-center mb-3 shadow-sm">
+                  <div class="text-sm sm:text-base font-extrabold text-indigo-950">Web API</div>
+                  <div class="text-xs text-indigo-700 font-medium">（裏側の複雑な処理）</div>
+                </div>
+
+                <!-- Web API 本体 -->
+                <div id="node-api" class="flow-node flow-node-api w-full bg-white border-2 border-indigo-300 rounded-2xl p-5 shadow-md">
+                  <div class="text-center mb-3">
+                    <span class="inline-block px-3 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-xs font-mono font-bold text-slate-600">-python-</span>
+                  </div>
+                  <ul class="space-y-2 text-sm font-bold text-slate-700 pl-2">
+                    <li class="flex items-center gap-2">
+                      <span class="w-1.5 h-1.5 rounded-full bg-brandIndigo"></span>
+                      DB接続
+                    </li>
+                    <li class="flex items-center gap-2">
+                      <span class="w-1.5 h-1.5 rounded-full bg-brandIndigo"></span>
+                      問い合わせ
+                    </li>
+                    <li class="flex items-center gap-2">
+                      <span class="w-1.5 h-1.5 rounded-full bg-brandIndigo"></span>
+                      データ取得
+                    </li>
+                    <li class="flex items-center gap-2">
+                      <span class="w-1.5 h-1.5 rounded-full bg-brandIndigo"></span>
+                      切断
+                    </li>
+                  </ul>
+                  <div class="mt-4 pt-3 border-t border-slate-100 text-center text-xs sm:text-sm font-bold text-indigo-700">
+                    など一連の複雑な処理
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================================
+           スライド 4：ノーコード開発者にとってのメリット
+      ========================================================== -->
+      <section class="slide flex-1 flex-col justify-center p-6 sm:p-10 md:p-12" data-slide="4">
+        <div class="mb-6 sm:mb-8">
+          <span class="text-xs sm:text-sm font-bold uppercase tracking-wider text-brandBlue">04 / Benefits</span>
+          <h2 class="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 mt-1">
+            Web APIを使うと何が嬉しいの？
+          </h2>
+          <p class="text-sm sm:text-base text-slate-500 mt-2">
+            複雑な処理をWeb APIに任せることで、ノーコード開発の良さを最大限に活かせます。
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
+          <!-- メリット1 -->
+          <div class="bg-gradient-to-b from-blue-50/70 to-white border border-blue-200 rounded-2xl p-6 shadow-sm flex flex-col">
+            <div class="w-12 h-12 rounded-xl bg-brandBlue text-white flex items-center justify-center mb-4 shadow-sm">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div class="text-xs font-bold text-brandBlue mb-1">メリット 01</div>
+            <h3 class="text-xl font-extrabold text-slate-900 mb-2">開発がラク</h3>
+            <p class="text-sm text-slate-600 leading-relaxed flex-1">
+              難しいデータベース処理やプログラムを書かず、<strong>パーツ（API）を1つ呼ぶだけ</strong>で完了。画面のデザインや使い勝手の改善に集中できます。
+            </p>
+          </div>
+
+          <!-- メリット2 -->
+          <div class="bg-gradient-to-b from-indigo-50/70 to-white border border-indigo-200 rounded-2xl p-6 shadow-sm flex flex-col">
+            <div class="w-12 h-12 rounded-xl bg-brandIndigo text-white flex items-center justify-center mb-4 shadow-sm">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </div>
+            <div class="text-xs font-bold text-brandIndigo mb-1">メリット 02</div>
+            <h3 class="text-xl font-extrabold text-slate-900 mb-2">使い回せる</h3>
+            <p class="text-sm text-slate-600 leading-relaxed flex-1">
+              一度Web APIを用意しておけば、<strong>別のPower AppsやExcelなど</strong>からも同じAPIを呼ぶだけで再利用できます。同じ処理の作り直しが不要になります。
+            </p>
+          </div>
+
+          <!-- メリット3 -->
+          <div class="bg-gradient-to-b from-emerald-50/70 to-white border border-emerald-200 rounded-2xl p-6 shadow-sm flex flex-col">
+            <div class="w-12 h-12 rounded-xl bg-emerald-500 text-white flex items-center justify-center mb-4 shadow-sm">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            </div>
+            <div class="text-xs font-bold text-emerald-600 mb-1">メリット 03</div>
+            <h3 class="text-xl font-extrabold text-slate-900 mb-2">安全</h3>
+            <p class="text-sm text-slate-600 leading-relaxed flex-1">
+              データベースのパスワードや接続情報などを<strong>アプリ側に直接持たなくて済む</strong>ため、情報漏えいや誤操作のリスクを減らせます。
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================================
+           スライド 5：まとめ
+      ========================================================== -->
+      <section class="slide flex-1 flex-col justify-center p-6 sm:p-10 md:p-14 relative overflow-hidden" data-slide="5">
+        <div class="absolute -bottom-24 -right-24 w-72 h-72 bg-indigo-50 rounded-full blur-3xl opacity-80 pointer-events-none"></div>
+
+        <div class="relative z-10 max-w-4xl mx-auto w-full">
+          <div class="text-center mb-8">
+            <span class="text-xs sm:text-sm font-bold uppercase tracking-wider text-brandBlue">05 / Summary</span>
+            <h2 class="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 mt-1">
+              まとめ：役割分担でアプリ開発をシンプルに
+            </h2>
+          </div>
+
+          <!-- 2つの対比カード -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+            <!-- Power Apps -->
+            <div class="bg-blue-50/70 border-2 border-brandBlue rounded-2xl p-6 sm:p-8 text-center shadow-sm">
+              <div class="inline-block px-3 py-1 rounded-full bg-brandBlue text-white text-xs font-bold mb-3">表側の担当</div>
+              <div class="text-lg sm:text-xl font-bold text-slate-700 mb-1">「画面と流れ」</div>
+              <div class="text-2xl sm:text-3xl font-black text-blue-900 mb-3">＝ Power Apps</div>
+              <p class="text-sm text-slate-600 font-medium">
+                ノーコードで素早く作る。<br />ユーザーが触る画面と全体の流れに集中！
+              </p>
+            </div>
+
+            <!-- Web API -->
+            <div class="bg-indigo-50/70 border-2 border-brandIndigo rounded-2xl p-6 sm:p-8 text-center shadow-sm">
+              <div class="inline-block px-3 py-1 rounded-full bg-brandIndigo text-white text-xs font-bold mb-3">裏側の担当</div>
+              <div class="text-lg sm:text-xl font-bold text-slate-700 mb-1">「裏方の複雑な処理」</div>
+              <div class="text-2xl sm:text-3xl font-black text-indigo-950 mb-3">＝ Web API</div>
+              <p class="text-sm text-slate-600 font-medium">
+                専門の窓口に任せる。<br />DB接続や重い処理は裏側で安全に代行！
+              </p>
+            </div>
+          </div>
+
+          <!-- 締めのメッセージ -->
+          <div class="bg-slate-900 text-white rounded-2xl p-6 sm:p-7 text-center shadow-lg">
+            <p class="text-base sm:text-xl font-bold leading-relaxed">
+              全部を自分で作らなくていい。<br class="sm:hidden" />
+              <span class="text-blue-300">Web APIをうまく使って、便利なアプリをシンプルに作りましょう！</span>
+            </p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- 下部ナビゲーションバー -->
+  <footer class="w-full max-w-5xl mx-auto px-4 pb-5 pt-1 flex items-center justify-between gap-4">
+    <!-- 前へボタン -->
+    <button id="prevBtn" type="button" class="inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-700 font-bold text-sm shadow-sm hover:bg-slate-50 active:scale-95 disabled:opacity-40 disabled:pointer-events-none transition cursor-pointer">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+      <span>前へ</span>
+    </button>
+
+    <!-- ページインジケーター（ドット＋数値） -->
+    <div class="flex flex-col items-center gap-1.5">
+      <div id="dotsContainer" class="flex items-center gap-2">
+        <!-- JSで生成 -->
+      </div>
+      <div id="pageIndicator" class="text-xs font-bold text-slate-500 tracking-wider">1 / 5</div>
+    </div>
+
+    <!-- 次へボタン -->
+    <button id="nextBtn" type="button" class="inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl bg-brandBlue text-white font-bold text-sm shadow-sm hover:bg-blue-600 active:scale-95 disabled:opacity-40 disabled:pointer-events-none transition cursor-pointer">
+      <span>次へ</span>
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+    </button>
+  </footer>
+
+  <!-- インタラクション制御スクリプト -->
+  <script>
+    (function () {
+      const slides = Array.from(document.querySelectorAll('.slide'));
+      const totalSlides = slides.length;
+      let currentSlide = 0;
+
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      const pageIndicator = document.getElementById('pageIndicator');
+      const progressBar = document.getElementById('progressBar');
+      const dotsContainer = document.getElementById('dotsContainer');
+
+      // ページドット生成
+      slides.forEach((_, idx) => {
+        const dot = document.createElement('button');
+        dot.type = 'button';
+        dot.setAttribute('aria-label', `スライド ${idx + 1} へ移動`);
+        dot.className = 'w-2.5 h-2.5 rounded-full transition-all duration-300 cursor-pointer';
+        dot.addEventListener('click', () => goToSlide(idx));
+        dotsContainer.appendChild(dot);
+      });
+
+      const dots = Array.from(dotsContainer.children);
+
+      /**
+       * 指定したインデックスのスライドを表示する
+       * @param {number} index - 0始まりのスライド番号
+       */
+      function goToSlide(index) {
+        if (index < 0 || index >= totalSlides) return;
+
+        // スライド切り替え時はアニメーションを初期状態にリセット
+        resetFlowAnimation();
+
+        slides[currentSlide].classList.remove('active');
+        currentSlide = index;
+        slides[currentSlide].classList.add('active');
+
+        updateUI();
+      }
+
+      /**
+       * ナビゲーションUI（ボタン・ドット・プログレスバー）を更新する
+       */
+      function updateUI() {
+        prevBtn.disabled = currentSlide === 0;
+        nextBtn.disabled = currentSlide === totalSlides - 1;
+        pageIndicator.textContent = `${currentSlide + 1} / ${totalSlides}`;
+        progressBar.style.width = `${((currentSlide + 1) / totalSlides) * 100}%`;
+
+        dots.forEach((dot, idx) => {
+          if (idx === currentSlide) {
+            dot.className = 'w-7 h-2.5 rounded-full bg-brandBlue transition-all duration-300 cursor-pointer';
+          } else {
+            dot.className = 'w-2.5 h-2.5 rounded-full bg-slate-300 hover:bg-slate-400 transition-all duration-300 cursor-pointer';
+          }
+        });
+      }
+
+      // ボタン操作
+      prevBtn.addEventListener('click', () => goToSlide(currentSlide - 1));
+      nextBtn.addEventListener('click', () => goToSlide(currentSlide + 1));
+
+      // キーボード操作（左右矢印キー）
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight') {
+          goToSlide(currentSlide + 1);
+        } else if (e.key === 'ArrowLeft') {
+          goToSlide(currentSlide - 1);
+        }
+      });
+
+      // タッチスワイプ操作対応
+      let touchStartX = 0;
+      const slideContainer = document.getElementById('slideContainer');
+      slideContainer.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+      }, { passive: true });
+      slideContainer.addEventListener('touchend', (e) => {
+        const touchEndX = e.changedTouches[0].screenX;
+        const diff = touchStartX - touchEndX;
+        if (Math.abs(diff) > 50) {
+          if (diff > 0) goToSlide(currentSlide + 1);
+          else goToSlide(currentSlide - 1);
+        }
+      }, { passive: true });
+
+      // =========================================================
+      // 3枚目：処理フローのアニメーション再生制御
+      // =========================================================
+      const playAnimBtn = document.getElementById('playAnimBtn');
+      const resetAnimBtn = document.getElementById('resetAnimBtn');
+      const playIcon = document.getElementById('playIcon');
+      const playBtnText = document.getElementById('playBtnText');
+      const animStatusDot = document.getElementById('animStatusDot');
+      const animStatusText = document.getElementById('animStatusText');
+
+      // 1ステップあたりの表示時間（ミリ秒）：口頭説明しやすいよう2.5秒に設定
+      const STEP_INTERVAL_MS = 2500;
+
+      // アイコン用SVGパス定義
+      const ICON_PLAY = '<path d="M8 5v14l11-7z"/>';
+      const ICON_PAUSE = '<path d="M6 5h4v14H6zm8 0h4v14h-4z"/>';
+
+      const animationSteps = [
+        { id: 'node-start',   text: 'Step 1/8：アプリの処理がスタートします。' },
+        { id: 'node-input',   text: 'Step 2/8：ユーザーが画面から検索条件などを入力します。' },
+        { id: 'node-getdb',   text: 'Step 3/8：Power Appsは「APIを呼ぶだけ」のブロックを実行します。' },
+        { id: 'arrow-req',    text: 'Step 4/8：Web APIへ「この条件のデータをください！」とお願い（リクエスト）します。' },
+        { id: 'node-api',     text: 'Step 5/8：Web APIが裏側でDB接続・問い合わせ・データ取得・切断を一括代行します。' },
+        { id: 'arrow-res',    text: 'Step 6/8：必要なデータだけを綺麗にまとめてPower Appsへ返却（レスポンス）します。' },
+        { id: 'node-process', text: 'Step 7/8：受け取ったデータを、画面で見やすい形に加工します。' },
+        { id: 'node-output',  text: 'Step 8/8：アプリの画面に結果が出力されて完了です！' }
+      ];
+
+      let animTimer = null;
+      let isAnimating = false;
+      let isPaused = false;
+      let currentStepIndex = -1; // -1: 初期状態, 0〜7: 実行中/一時停止中のステップ, 8: 完了状態
+
+      function clearHighlights() {
+        animationSteps.forEach((step) => {
+          const el = document.getElementById(step.id);
+          if (el) el.classList.remove('highlight');
+        });
+      }
+
+      /**
+       * アニメーションを完全に初期状態へリセットする
+       */
+      function resetFlowAnimation() {
+        if (animTimer) {
+          clearTimeout(animTimer);
+          animTimer = null;
+        }
+        isAnimating = false;
+        isPaused = false;
+        currentStepIndex = -1;
+        clearHighlights();
+
+        if (playIcon) playIcon.innerHTML = ICON_PLAY;
+        if (playBtnText) playBtnText.textContent = 'アニメーション再生';
+        if (resetAnimBtn) resetAnimBtn.disabled = true;
+        if (animStatusDot) {
+          animStatusDot.className = 'w-2 h-2 rounded-full bg-brandBlue inline-block shrink-0';
+        }
+        if (animStatusText) {
+          animStatusText.textContent = '「アニメーション再生」を押すと、データの動きをステップごとに確認できます。';
+        }
+      }
+
+      /**
+       * 一時停止（現在のハイライトと説明文はそのまま維持する）
+       */
+      function pauseFlowAnimation() {
+        if (animTimer) {
+          clearTimeout(animTimer);
+          animTimer = null;
+        }
+        isAnimating = false;
+        isPaused = true;
+
+        playIcon.innerHTML = ICON_PLAY;
+        playBtnText.textContent = '続きから再開';
+        animStatusDot.className = 'w-2 h-2 rounded-full bg-amber-500 inline-block shrink-0';
+      }
+
+      /**
+       * 指定ステップを実行してハイライト・説明文を更新する
+       * @param {number} stepIndex
+       */
+      function runStep(stepIndex) {
+        if (!isAnimating) return;
+
+        clearHighlights();
+
+        // 全ステップ完了時
+        if (stepIndex >= animationSteps.length) {
+          isAnimating = false;
+          isPaused = false;
+          currentStepIndex = animationSteps.length;
+          playIcon.innerHTML = ICON_PLAY;
+          playBtnText.textContent = 'もう一度再生';
+          animStatusDot.className = 'w-2 h-2 rounded-full bg-emerald-500 inline-block shrink-0';
+          animStatusText.textContent = '一連の流れが完了しました！Power Apps側は「APIを呼ぶだけ」で済んでいます。';
+          return;
+        }
+
+        currentStepIndex = stepIndex;
+        const current = animationSteps[stepIndex];
+        const el = document.getElementById(current.id);
+        if (el) el.classList.add('highlight');
+        animStatusText.textContent = current.text;
+
+        // 次のステップへ進むタイマーをセット（2.5秒後）
+        animTimer = setTimeout(() => {
+          runStep(stepIndex + 1);
+        }, STEP_INTERVAL_MS);
+      }
+
+      // 再生 / 一時停止 / 再開ボタンのクリック処理
+      playAnimBtn.addEventListener('click', () => {
+        if (isAnimating) {
+          // 再生中 -> 一時停止（ハイライトと文字は維持）
+          pauseFlowAnimation();
+          return;
+        }
+
+        // 再生開始または再開
+        isAnimating = true;
+        playIcon.innerHTML = ICON_PAUSE;
+        playBtnText.textContent = '一時停止';
+        resetAnimBtn.disabled = false;
+        animStatusDot.className = 'w-2 h-2 rounded-full bg-brandBlue animate-pulse inline-block shrink-0';
+
+        if (isPaused && currentStepIndex >= 0 && currentStepIndex < animationSteps.length) {
+          // 一時停止中 -> 停止していた場所の次のステップから再開
+          isPaused = false;
+          runStep(currentStepIndex + 1);
+        } else {
+          // 初期状態または最後まで完了後 -> Step 1（インデックス0）から再生
+          isPaused = false;
+          runStep(0);
+        }
+      });
+
+      // リセットボタンのクリック処理
+      resetAnimBtn.addEventListener('click', () => {
+        resetFlowAnimation();
+      });
+
+      // 初期表示
+      updateUI();
+    })();
+  </script>
+</body>
+</html>
