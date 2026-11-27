@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AWS Lambda × API Gateway サーバーレスWeb API入門</title>
+  <title>Lambda + API Gateway で始める サーバーレス Web API 構築</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Google Fonts: Inter, Noto Sans JP, JetBrains Mono -->
@@ -21,11 +21,13 @@
             mono: ['"JetBrains Mono"', 'monospace'],
           },
           colors: {
-            aws: '#FF9900',
-            'aws-dark': '#E68A00',
-            accent: '#38BDF8',
-            navy: '#0B1120',
-            surface: '#111827',
+            aws: '#f97316',
+            'aws-dark': '#ea580c',
+            cyan: '#38bdf8',
+            emerald: '#10b981',
+            purple: '#a855f7',
+            navy: '#0f172a',
+            slatecard: '#1e293b',
           }
         }
       }
@@ -34,16 +36,16 @@
   <style>
     body {
       font-family: 'Inter', 'Noto Sans JP', sans-serif;
-      background-color: #060A14;
-      color: #F8FAFC;
+      background-color: #020617;
+      color: #f8fafc;
       overflow: hidden;
     }
 
-    /* スライド遷移アニメーション */
+    /* スライド切り替えアニメーション */
     .slide {
       display: none;
       opacity: 0;
-      transform: translateY(10px);
+      transform: translateY(8px);
       transition: opacity 0.25s ease-out, transform 0.25s ease-out;
     }
     .slide.active {
@@ -52,10 +54,23 @@
       transform: translateY(0);
     }
 
-    /* カスタムスクロールバー */
+    /* インタラクティブSVGノードのスタイル */
+    .arch-node {
+      cursor: pointer;
+      transition: filter 0.2s ease, opacity 0.2s ease;
+    }
+    .arch-node:hover {
+      filter: brightness(1.18);
+    }
+    .arch-node.selected .node-outline {
+      stroke-width: 3;
+      filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.45));
+    }
+
+    /* スクロールバーの最小化 */
     ::-webkit-scrollbar {
-      height: 6px;
-      width: 6px;
+      height: 5px;
+      width: 5px;
     }
     ::-webkit-scrollbar-track {
       background: rgba(15, 23, 42, 0.4);
@@ -66,419 +81,643 @@
     }
   </style>
 </head>
-<body class="h-screen w-screen flex flex-col items-center justify-between bg-[#060A14] text-slate-100 select-none">
+<body class="h-screen w-screen flex flex-col items-center justify-between bg-[#020617] text-slate-100 select-none">
 
   <!-- メインプレゼンテーションエリア -->
-  <main id="deck-wrapper" class="flex-1 w-full flex items-center justify-center p-2 sm:p-4 md:p-5 overflow-hidden">
-    <!-- 16:9 レスポンシブスライドフレーム -->
-    <div id="slide-stage" class="relative w-full max-w-6xl h-full max-h-[700px] aspect-[16/9] bg-slate-900 rounded-2xl shadow-2xl shadow-black/60 border border-slate-700/70 overflow-hidden flex flex-col">
+  <main id="deck-wrapper" class="flex-1 w-full flex items-center justify-center p-2 sm:p-4 overflow-hidden">
+    <!-- 16:9 レスポンシブスライドステージ -->
+    <div id="slide-stage" class="relative w-full max-w-6xl h-full max-h-[710px] aspect-[16/9] bg-[#0f172a] rounded-2xl shadow-2xl shadow-black/70 border border-slate-700/80 overflow-hidden flex flex-col">
 
       <!-- =========================================================
            SLIDE 1: タイトルスライド
       ========================================================== -->
-      <section class="slide active flex-col justify-between h-full w-full p-8 sm:p-12 md:p-16 bg-gradient-to-br from-[#0B1120] via-slate-900 to-[#0F172A] relative" data-title="タイトル：サーバーレス Web API 入門">
+      <section class="slide active flex-col justify-between h-full w-full p-8 sm:p-12 md:p-16 bg-gradient-to-br from-[#0f172a] via-[#131e35] to-[#1e293b] relative" data-title="1. タイトル">
         <!-- 背景グロウ装飾 -->
-        <div class="absolute top-0 right-0 w-[420px] h-[420px] bg-aws/10 rounded-full blur-3xl -translate-y-1/3 translate-x-1/4 pointer-events-none"></div>
-        <div class="absolute bottom-0 left-0 w-[360px] h-[360px] bg-sky-500/10 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4 pointer-events-none"></div>
+        <div class="absolute top-0 right-0 w-[440px] h-[440px] bg-aws/10 rounded-full blur-3xl -translate-y-1/3 translate-x-1/4 pointer-events-none"></div>
+        <div class="absolute bottom-0 left-0 w-[380px] h-[380px] bg-cyan/10 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4 pointer-events-none"></div>
 
         <!-- 上部バッジ -->
-        <div class="relative z-10 flex flex-wrap items-center gap-3">
-          <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold bg-aws/15 text-aws border border-aws/30">
-            <i class="fa-brands fa-aws text-base"></i> AWS Serverless Web API
+        <div class="relative z-10 flex flex-wrap items-center gap-2.5 sm:gap-3">
+          <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold bg-aws/15 text-aws border border-aws/35">
+            <i class="fa-brands fa-aws text-base"></i> Python / C# 両対応
           </span>
-          <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-medium bg-slate-800/90 text-slate-300 border border-slate-700">
-            <i class="fa-solid fa-users text-sky-400 text-xs"></i> 対象：社内API開発メンバー（Python / C# エンジニア）
+          <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold bg-emerald/15 text-emerald border border-emerald/35">
+            <i class="fa-solid fa-server text-xs"></i> サーバー管理不要
+          </span>
+          <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold bg-cyan/15 text-cyan border border-cyan/35">
+            <i class="fa-solid fa-cubes text-xs"></i> 独立デプロイ
           </span>
         </div>
 
         <!-- 中央タイトル -->
         <div class="relative z-10 my-auto max-w-4xl">
-          <div class="w-16 h-1.5 bg-gradient-to-r from-aws to-amber-300 rounded-full mb-6"></div>
-          <p class="text-sm sm:text-base font-bold text-sky-400 tracking-wider uppercase mb-2">
-            AWS Lambda × API Gateway
+          <div class="w-16 h-1.5 bg-gradient-to-r from-aws via-amber-400 to-cyan rounded-full mb-6"></div>
+          <p class="text-xs sm:text-sm font-bold text-cyan tracking-widest uppercase mb-3">
+            開発メンバー向け 技術共有プレゼンテーション
           </p>
-          <h1 class="text-3xl sm:text-5xl md:text-6xl font-black tracking-tight text-white leading-tight mb-5">
-            サーバーレスWeb API入門
+          <h1 class="text-3xl sm:text-5xl md:text-[52px] font-black tracking-tight text-white leading-[1.2] mb-5">
+            Lambda + API Gateway で始める<br>
+            <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan via-sky-300 to-aws">サーバーレス Web API 構築</span>
           </h1>
           <p class="text-base sm:text-xl md:text-2xl text-slate-300 font-medium leading-relaxed">
-            開発者の運用負荷を減らし、<span class="text-aws font-bold">ビジネスロジックに集中</span>するための選択肢
+            EC2 + FastAPI からの進化：開発メンバーの運用負荷を劇的に減らすアプローチ
           </p>
         </div>
 
         <!-- 下部フッター -->
-        <div class="relative z-10 flex items-center justify-between pt-5 border-t border-slate-800 text-xs sm:text-sm text-slate-400">
+        <div class="relative z-10 flex items-center justify-between pt-5 border-t border-slate-700/70 text-xs sm:text-sm text-slate-400">
           <div class="flex items-center gap-5">
-            <span class="flex items-center gap-1.5"><i class="fa-brands fa-python text-sky-400"></i> Python 対応</span>
-            <span class="flex items-center gap-1.5"><i class="fa-solid fa-code text-aws"></i> C# (.NET) 対応</span>
-            <span class="hidden sm:flex items-center gap-1.5"><i class="fa-solid fa-server text-slate-500"></i> 現状 EC2 + FastAPI との比較</span>
+            <span class="flex items-center gap-1.5"><i class="fa-solid fa-users text-cyan"></i> 対象：社内API開発メンバー</span>
+            <span class="hidden sm:flex items-center gap-1.5"><i class="fa-solid fa-diagram-project text-aws"></i> アーキテクチャ図・実装例つき</span>
           </div>
-          <span class="hidden md:inline text-slate-500">← / → キーまたは下部ボタンで操作</span>
+          <span class="hidden md:inline text-slate-500">← / → キー・Space・目次ボタンで操作</span>
         </div>
       </section>
 
       <!-- =========================================================
-           SLIDE 2: 仕組みの違い（アーキテクチャ図解）
+           SLIDE 2: アーキテクチャ比較図（Before vs After）【新規・SVG図解】
       ========================================================== -->
-      <section class="slide flex-col justify-between h-full w-full p-6 sm:p-9 md:p-11 bg-[#0B1120] overflow-y-auto" data-title="仕組みの違い（アーキテクチャ図解）">
+      <section class="slide flex-col justify-between h-full w-full p-5 sm:p-8 md:p-10 bg-[#0f172a] overflow-y-auto" data-title="2. アーキテクチャ比較図（Before vs After）">
         <div>
-          <span class="text-xs font-bold uppercase tracking-widest text-sky-400">01 / Architecture</span>
-          <h2 class="text-2xl sm:text-3xl font-black text-white mt-1">仕組みの違い：常時稼働 vs 必要な時だけ実行</h2>
+          <span class="text-xs font-bold uppercase tracking-widest text-cyan">01 / Architecture Comparison</span>
+          <h2 class="text-xl sm:text-3xl font-black text-white mt-0.5">アーキテクチャ比較：1台同居から機能ごとの独立構成へ</h2>
         </div>
 
-        <!-- 比較ダイアグラム -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 my-auto py-3">
-          <!-- 左：現状 EC2 + FastAPI -->
-          <div class="bg-slate-900/90 rounded-2xl p-5 border border-slate-700/80 flex flex-col justify-between">
-            <div class="flex items-center justify-between mb-4">
-              <span class="text-xs sm:text-sm font-bold text-slate-300 bg-slate-800 px-3 py-1 rounded-full border border-slate-700">
-                現状：EC2 + FastAPI
+        <!-- 左右比較 SVG カード -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 my-auto py-2">
+          <!-- 左：Before (EC2 + FastAPI) -->
+          <div class="bg-[#1e293b]/70 rounded-2xl p-4 border border-slate-700/80 flex flex-col">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs sm:text-sm font-extrabold text-rose-300 bg-rose-500/15 px-3 py-1 rounded-full border border-rose-500/30">
+                Before：現状（EC2 + FastAPI）
               </span>
-              <span class="text-xs font-semibold text-slate-400">常時稼働・自前管理</span>
+              <span class="text-[11px] sm:text-xs font-semibold text-slate-400">密結合・インフラ自前管理</span>
             </div>
 
-            <div class="flex flex-col items-center gap-2 text-xs sm:text-sm">
-              <div class="w-full py-2.5 px-4 bg-slate-800/80 rounded-xl border border-slate-700 flex items-center gap-3 font-semibold text-slate-200">
-                <i class="fa-solid fa-laptop text-slate-400 w-5 text-center"></i> クライアント（Web / アプリ）
-              </div>
-              <svg class="w-5 h-5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14m0 0l-5-5m5 5l5-5"/></svg>
+            <svg viewBox="0 0 540 340" class="w-full h-auto" role="img" aria-label="現状のEC2とFastAPIのアーキテクチャ図">
+              <defs>
+                <marker id="arrow-slate" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 1 L 10 5 L 0 9 z" fill="#94a3b8"/>
+                </marker>
+              </defs>
 
-              <!-- EC2 インスタンス枠 -->
-              <div class="w-full p-3.5 rounded-xl border-2 border-dashed border-slate-600 bg-slate-950/60 space-y-2">
-                <div class="flex items-center justify-between text-[11px] sm:text-xs font-bold text-slate-400">
-                  <span><i class="fa-solid fa-server mr-1.5 text-slate-500"></i>EC2 インスタンス（24h稼働）</span>
-                  <span class="px-2 py-0.5 rounded bg-rose-500/15 text-rose-300 border border-rose-500/30">OS/ミドルウェア管理あり</span>
-                </div>
-                <div class="py-2 px-3 bg-slate-800 border border-slate-700 rounded-lg text-center font-semibold text-slate-200">
-                  Nginx（リバースプロキシ・SSL）
-                </div>
-                <div class="flex justify-center"><svg class="w-4 h-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14m0 0l-4-4m4 4l4-4"/></svg></div>
-                <div class="py-2 px-3 bg-slate-700/80 border border-slate-600 rounded-lg text-center font-bold text-white">
-                  Uvicorn / FastAPI（プロセス常駐）
-                </div>
-              </div>
+              <!-- Client -->
+              <rect x="12" y="125" width="84" height="90" rx="10" fill="#1e293b" stroke="#64748b" stroke-width="1.5"/>
+              <text x="54" y="164" text-anchor="middle" fill="#f8fafc" font-size="13" font-weight="700">Client</text>
+              <text x="54" y="184" text-anchor="middle" fill="#94a3b8" font-size="11">Web / App</text>
 
-              <svg class="w-5 h-5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14m0 0l-5-5m5 5l5-5"/></svg>
-              <div class="w-full py-2.5 px-4 bg-slate-800/80 rounded-xl border border-slate-700 flex items-center gap-3 font-semibold text-slate-300">
-                <i class="fa-solid fa-database text-slate-400 w-5 text-center"></i> DB / S3
-              </div>
-            </div>
+              <!-- Arrow: Client -> EC2 -->
+              <line x1="96" y1="170" x2="126" y2="170" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow-slate)"/>
+
+              <!-- EC2 Boundary -->
+              <rect x="132" y="20" width="276" height="300" rx="14" fill="#0f172a" stroke="#f43f5e" stroke-width="2" stroke-dasharray="6 4"/>
+              <text x="146" y="44" fill="#fda4af" font-size="12" font-weight="700">EC2 インスタンス（24時間稼働）</text>
+
+              <!-- Nginx -->
+              <rect x="150" y="58" width="240" height="42" rx="8" fill="#1e293b" stroke="#64748b" stroke-width="1.5"/>
+              <text x="270" y="84" text-anchor="middle" fill="#e2e8f0" font-size="12" font-weight="700">Nginx（リバースプロキシ / SSL）</text>
+
+              <!-- Arrow: Nginx -> FastAPI -->
+              <line x1="270" y1="100" x2="270" y2="119" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow-slate)"/>
+
+              <!-- FastAPI / Uvicorn Container -->
+              <rect x="150" y="124" width="240" height="114" rx="10" fill="#1e293b" stroke="#94a3b8" stroke-width="1.5"/>
+              <text x="270" y="147" text-anchor="middle" fill="#f8fafc" font-size="12" font-weight="700">FastAPI / Uvicorn（全APIが同居）</text>
+
+              <!-- API Boxes inside EC2 -->
+              <rect x="162" y="162" width="66" height="60" rx="7" fill="#0f172a" stroke="#475569" stroke-width="1.2"/>
+              <text x="195" y="187" text-anchor="middle" fill="#e2e8f0" font-size="12" font-weight="700">API A</text>
+              <text x="195" y="206" text-anchor="middle" fill="#94a3b8" font-size="10">Python</text>
+
+              <rect x="237" y="162" width="66" height="60" rx="7" fill="#0f172a" stroke="#475569" stroke-width="1.2"/>
+              <text x="270" y="187" text-anchor="middle" fill="#e2e8f0" font-size="12" font-weight="700">API B</text>
+              <text x="270" y="206" text-anchor="middle" fill="#94a3b8" font-size="10">Python</text>
+
+              <rect x="312" y="162" width="66" height="60" rx="7" fill="#0f172a" stroke="#475569" stroke-width="1.2"/>
+              <text x="345" y="187" text-anchor="middle" fill="#e2e8f0" font-size="12" font-weight="700">API C</text>
+              <text x="345" y="206" text-anchor="middle" fill="#94a3b8" font-size="10">Python</text>
+
+              <!-- Burden Box -->
+              <rect x="150" y="252" width="240" height="52" rx="8" fill="rgba(244, 63, 94, 0.12)" stroke="#f43f5e" stroke-width="1.2"/>
+              <text x="270" y="274" text-anchor="middle" fill="#fda4af" font-size="11" font-weight="700">OSパッチ・プロセス監視・メモリ管理</text>
+              <text x="270" y="292" text-anchor="middle" fill="#fecdd3" font-size="11">1箇所の障害が他APIへ波及</text>
+
+              <!-- Arrow: EC2 -> RDS/S3 -->
+              <line x1="408" y1="170" x2="438" y2="170" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow-slate)"/>
+
+              <!-- RDS / S3 -->
+              <rect x="444" y="125" width="84" height="90" rx="10" fill="#1e293b" stroke="#64748b" stroke-width="1.5"/>
+              <text x="486" y="164" text-anchor="middle" fill="#f8fafc" font-size="13" font-weight="700">RDS / S3</text>
+              <text x="486" y="184" text-anchor="middle" fill="#94a3b8" font-size="10">DB・Storage</text>
+            </svg>
           </div>
 
-          <!-- 右：サーバーレス API Gateway + Lambda -->
-          <div class="bg-slate-900/90 rounded-2xl p-5 border-2 border-aws/50 shadow-lg shadow-aws/5 flex flex-col justify-between">
-            <div class="flex items-center justify-between mb-4">
-              <span class="text-xs sm:text-sm font-bold text-aws bg-aws/15 px-3 py-1 rounded-full border border-aws/30">
-                サーバーレス：API GW + Lambda
+          <!-- 右：After (API Gateway + Lambda) -->
+          <div class="bg-[#1e293b]/70 rounded-2xl p-4 border-2 border-cyan/50 shadow-lg shadow-cyan/5 flex flex-col">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs sm:text-sm font-extrabold text-cyan bg-cyan/15 px-3 py-1 rounded-full border border-cyan/35">
+                After：サーバーレス（APIGW + Lambda）
               </span>
-              <span class="text-xs font-bold text-sky-400">インフラ管理はAWS</span>
+              <span class="text-[11px] sm:text-xs font-bold text-emerald">疎結合・管理不要</span>
             </div>
 
-            <div class="flex flex-col items-center gap-2 text-xs sm:text-sm">
-              <div class="w-full py-2.5 px-4 bg-slate-800/80 rounded-xl border border-slate-700 flex items-center gap-3 font-semibold text-slate-200">
-                <i class="fa-solid fa-laptop text-sky-400 w-5 text-center"></i> クライアント（Web / アプリ）
-              </div>
-              <svg class="w-5 h-5 text-sky-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14m0 0l-5-5m5 5l5-5"/></svg>
+            <svg viewBox="0 0 540 340" class="w-full h-auto" role="img" aria-label="サーバーレス構成のアーキテクチャ図">
+              <defs>
+                <marker id="arrow-cyan" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 1 L 10 5 L 0 9 z" fill="#38bdf8"/>
+                </marker>
+                <marker id="arrow-emerald" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 1 L 10 5 L 0 9 z" fill="#10b981"/>
+                </marker>
+              </defs>
+
+              <!-- Client -->
+              <rect x="10" y="125" width="76" height="90" rx="10" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
+              <text x="48" y="164" text-anchor="middle" fill="#f8fafc" font-size="13" font-weight="700">Client</text>
+              <text x="48" y="184" text-anchor="middle" fill="#94a3b8" font-size="10">Web / App</text>
+
+              <!-- Arrow: Client -> APIGW -->
+              <line x1="86" y1="170" x2="114" y2="170" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow-cyan)"/>
+
+              <!-- AWS Managed Boundary -->
+              <rect x="118" y="18" width="412" height="304" rx="14" fill="rgba(15, 23, 42, 0.85)" stroke="#38bdf8" stroke-width="2" stroke-dasharray="6 4"/>
+              <text x="132" y="40" fill="#38bdf8" font-size="12" font-weight="700">AWS サーバーレス基盤（OS・サーバー管理ゼロ）</text>
 
               <!-- API Gateway -->
-              <div class="w-full py-3 px-4 bg-sky-500/15 border border-sky-400/40 rounded-xl flex items-center justify-between">
-                <div class="flex items-center gap-2.5 font-bold text-sky-300">
-                  <i class="fa-solid fa-network-wired w-5 text-center"></i> API Gateway
-                </div>
-                <span class="text-xs text-sky-200/80">HTTPS / ルーティング / 認証</span>
-              </div>
-              <svg class="w-5 h-5 text-aws" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14m0 0l-5-5m5 5l5-5"/></svg>
+              <rect x="132" y="92" width="116" height="156" rx="10" fill="rgba(56, 189, 248, 0.14)" stroke="#38bdf8" stroke-width="1.8"/>
+              <text x="190" y="126" text-anchor="middle" fill="#7dd3fc" font-size="13" font-weight="800">API Gateway</text>
+              <text x="190" y="154" text-anchor="middle" fill="#e2e8f0" font-size="11">・ルーティング</text>
+              <text x="190" y="176" text-anchor="middle" fill="#e2e8f0" font-size="11">・認証 / 認可</text>
+              <text x="190" y="198" text-anchor="middle" fill="#e2e8f0" font-size="11">・スロットリング</text>
+              <text x="190" y="226" text-anchor="middle" fill="#38bdf8" font-size="10" font-weight="700">HTTPS 自動対応</text>
 
-              <!-- Lambda -->
-              <div class="w-full py-3.5 px-4 bg-aws/15 border border-aws/40 rounded-xl flex flex-col gap-1">
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-2.5 font-bold text-aws">
-                    <i class="fa-solid fa-bolt w-5 text-center"></i> AWS Lambda 関数
-                  </div>
-                  <span class="text-[11px] bg-aws text-slate-950 font-black px-2 py-0.5 rounded">リクエスト時のみ実行</span>
-                </div>
-                <p class="text-xs text-amber-100/80 pl-7">Python / C# コードを置くだけ・処理終了で自動停止</p>
-              </div>
+              <!-- Branch Arrows: APIGW -> Lambdas -->
+              <line x1="248" y1="130" x2="282" y2="88" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow-cyan)"/>
+              <line x1="248" y1="170" x2="282" y2="170" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow-cyan)"/>
+              <line x1="248" y1="210" x2="282" y2="252" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow-cyan)"/>
 
-              <svg class="w-5 h-5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14m0 0l-5-5m5 5l5-5"/></svg>
-              <div class="w-full py-2.5 px-4 bg-slate-800/80 rounded-xl border border-slate-700 flex items-center gap-3 font-semibold text-slate-300">
-                <i class="fa-solid fa-database text-slate-400 w-5 text-center"></i> DB / S3
-              </div>
-            </div>
+              <!-- Lambda A (Python) -->
+              <rect x="288" y="54" width="128" height="66" rx="9" fill="rgba(56, 189, 248, 0.12)" stroke="#38bdf8" stroke-width="1.6"/>
+              <text x="352" y="81" text-anchor="middle" fill="#f8fafc" font-size="12" font-weight="800">Lambda：API A</text>
+              <text x="352" y="102" text-anchor="middle" fill="#38bdf8" font-size="11" font-weight="700">Python 3.x（独立）</text>
+
+              <!-- Lambda B (C#) -->
+              <rect x="288" y="137" width="128" height="66" rx="9" fill="rgba(168, 85, 247, 0.16)" stroke="#a855f7" stroke-width="1.6"/>
+              <text x="352" y="164" text-anchor="middle" fill="#f8fafc" font-size="12" font-weight="800">Lambda：API B</text>
+              <text x="352" y="185" text-anchor="middle" fill="#c084fc" font-size="11" font-weight="700">C# .NET（独立）</text>
+
+              <!-- Lambda C (Python) -->
+              <rect x="288" y="220" width="128" height="66" rx="9" fill="rgba(249, 115, 22, 0.14)" stroke="#f97316" stroke-width="1.6"/>
+              <text x="352" y="247" text-anchor="middle" fill="#f8fafc" font-size="12" font-weight="800">Lambda：API C</text>
+              <text x="352" y="268" text-anchor="middle" fill="#fb923c" font-size="11" font-weight="700">Python 3.x（独立）</text>
+
+              <!-- Merge Arrows: Lambdas -> RDS/S3 -->
+              <line x1="416" y1="87" x2="444" y2="146" stroke="#10b981" stroke-width="1.8" marker-end="url(#arrow-emerald)"/>
+              <line x1="416" y1="170" x2="444" y2="170" stroke="#10b981" stroke-width="1.8" marker-end="url(#arrow-emerald)"/>
+              <line x1="416" y1="253" x2="444" y2="194" stroke="#10b981" stroke-width="1.8" marker-end="url(#arrow-emerald)"/>
+
+              <!-- RDS / S3 -->
+              <rect x="450" y="125" width="68" height="90" rx="10" fill="#1e293b" stroke="#10b981" stroke-width="1.6"/>
+              <text x="484" y="164" text-anchor="middle" fill="#6ee7b7" font-size="12" font-weight="800">RDS</text>
+              <text x="484" y="184" text-anchor="middle" fill="#6ee7b7" font-size="12" font-weight="800">/ S3</text>
+            </svg>
           </div>
         </div>
 
-        <!-- まとめバー -->
-        <div class="bg-slate-800/80 border border-slate-700 rounded-xl px-5 py-3 flex items-center gap-3">
+        <!-- 下部サマリー -->
+        <div class="bg-[#1e293b]/90 border border-slate-700 rounded-xl px-4 py-2.5 flex items-center gap-3">
           <span class="shrink-0 w-8 h-8 rounded-lg bg-aws/20 text-aws flex items-center justify-center">
             <i class="fa-solid fa-lightbulb"></i>
           </span>
           <p class="text-xs sm:text-sm font-bold text-slate-200">
-            「サーバーを借りて守り続ける」構成から、<span class="text-aws">「関数コードだけを置いてAWSに実行を任せる」</span>構成へ。
+            1台のサーバーに全APIを詰め込む構成から、<span class="text-cyan">「機能ごとに独立・疎結合な関数」</span>を並べる構成へ。言語の混在や個別リリースが安全に行えます。
           </p>
         </div>
       </section>
 
       <!-- =========================================================
-           SLIDE 3: 【最重要・強化】開発メンバーの負荷はどう減る？
+           SLIDE 3: サーバーレス Web API 詳細アーキテクチャ図【新規・インタラクティブSVG】
       ========================================================== -->
-      <section class="slide flex-col justify-between h-full w-full p-6 sm:p-9 md:p-11 bg-[#0B1120] overflow-y-auto" data-title="【最重要】開発メンバーの負荷はどう減る？">
+      <section class="slide flex-col justify-between h-full w-full p-5 sm:p-8 md:p-10 bg-[#0f172a] overflow-y-auto" data-title="3. 詳細アーキテクチャ図（インタラクティブ）">
         <div class="flex flex-wrap items-end justify-between gap-2">
           <div>
-            <span class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-aws">
-              <i class="fa-solid fa-star"></i> 02 / Developer Experience（最重要）
-            </span>
-            <h2 class="text-2xl sm:text-3xl font-black text-white mt-1">開発メンバーの負荷はどう減る？（Before / After）</h2>
+            <span class="text-xs font-bold uppercase tracking-widest text-aws">02 / Detailed Architecture</span>
+            <h2 class="text-xl sm:text-3xl font-black text-white mt-0.5">サーバーレス Web API 詳細アーキテクチャ</h2>
           </div>
-          <span class="text-xs font-bold px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-            やらなくてよくなる4つの面倒ごと
+          <span class="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-cyan/15 text-cyan border border-cyan/35">
+            <i class="fa-solid fa-hand-pointer"></i> 図中の各コンポーネントをクリックして詳細表示
           </span>
         </div>
 
-        <!-- 2x2 Before/After カード -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4 my-auto py-3">
-          <!-- Card 1 -->
-          <div class="bg-slate-900/95 rounded-2xl p-4 sm:p-5 border border-slate-700/80 flex flex-col justify-between gap-2.5">
+        <!-- インタラクティブ SVG 全体図 -->
+        <div class="bg-[#1e293b]/55 rounded-2xl p-3 border border-slate-700/80 my-auto">
+          <svg viewBox="0 0 1060 305" class="w-full h-auto max-h-[305px]" role="img" aria-label="サーバーレスWeb APIの詳細アーキテクチャ図">
+            <defs>
+              <marker id="det-arrow-cyan" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 1 L 10 5 L 0 9 z" fill="#38bdf8"/>
+              </marker>
+              <marker id="det-arrow-orange" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 1 L 10 5 L 0 9 z" fill="#f97316"/>
+              </marker>
+              <marker id="det-arrow-emerald" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 1 L 10 5 L 0 9 z" fill="#10b981"/>
+              </marker>
+              <marker id="det-arrow-purple" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 1 L 10 5 L 0 9 z" fill="#a855f7"/>
+              </marker>
+            </defs>
+
+            <!-- Client Box -->
+            <rect x="14" y="76" width="132" height="104" rx="12" fill="#1e293b" stroke="#64748b" stroke-width="1.8"/>
+            <text x="80" y="114" text-anchor="middle" fill="#f8fafc" font-size="14" font-weight="800">Client</text>
+            <text x="80" y="138" text-anchor="middle" fill="#94a3b8" font-size="12">Web / 社内アプリ</text>
+            <text x="80" y="160" text-anchor="middle" fill="#64748b" font-size="10">HTTPS Request</text>
+
+            <!-- Arrow: Client -> API Gateway -->
+            <line x1="146" y1="128" x2="218" y2="128" stroke="#38bdf8" stroke-width="2.5" marker-end="url(#det-arrow-cyan)"/>
+            <text x="182" y="116" text-anchor="middle" fill="#7dd3fc" font-size="11" font-weight="700">HTTPS</text>
+
+            <!-- AWS Cloud Boundary -->
+            <rect x="200" y="12" width="846" height="282" rx="16" fill="rgba(15, 23, 42, 0.7)" stroke="#38bdf8" stroke-width="2" stroke-dasharray="7 5"/>
+            <text x="220" y="36" fill="#38bdf8" font-size="13" font-weight="800">AWS Cloud（マネージド・サーバーレス領域）</text>
+
+            <!-- Node 1: Amazon API Gateway -->
+            <g id="arch-node-apigw" class="arch-node selected" onclick="selectArchNode('apigw')">
+              <rect class="node-outline" x="224" y="60" width="198" height="132" rx="12" fill="rgba(56, 189, 248, 0.14)" stroke="#38bdf8" stroke-width="2"/>
+              <text x="323" y="90" text-anchor="middle" fill="#7dd3fc" font-size="14" font-weight="800">Amazon API Gateway</text>
+              <text x="323" y="116" text-anchor="middle" fill="#e2e8f0" font-size="12">・HTTPS エンドポイント</text>
+              <text x="323" y="138" text-anchor="middle" fill="#e2e8f0" font-size="12">・ルーティング / 認証</text>
+              <text x="323" y="160" text-anchor="middle" fill="#e2e8f0" font-size="12">・流量制御（スロットリング）</text>
+              <text x="323" y="182" text-anchor="middle" fill="#38bdf8" font-size="10" font-weight="700">クリックで解説</text>
+            </g>
+
+            <!-- Arrow: API Gateway -> Lambda -->
+            <line x1="422" y1="126" x2="482" y2="126" stroke="#f97316" stroke-width="2.5" marker-end="url(#det-arrow-orange)"/>
+            <text x="452" y="114" text-anchor="middle" fill="#fdba74" font-size="11" font-weight="700">Event</text>
+
+            <!-- Node 2: AWS Lambda -->
+            <g id="arch-node-lambda" class="arch-node" onclick="selectArchNode('lambda')">
+              <rect class="node-outline" x="488" y="52" width="260" height="148" rx="12" fill="rgba(249, 115, 22, 0.14)" stroke="#f97316" stroke-width="2"/>
+              <text x="618" y="80" text-anchor="middle" fill="#fdba74" font-size="14" font-weight="800">AWS Lambda（API 実行基盤）</text>
+
+              <!-- Python Chip -->
+              <rect x="506" y="94" width="106" height="54" rx="8" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>
+              <text x="559" y="118" text-anchor="middle" fill="#38bdf8" font-size="12" font-weight="800">Python 3.x</text>
+              <text x="559" y="136" text-anchor="middle" fill="#cbd5e1" font-size="10">関数ハンドラ</text>
+
+              <!-- C# Chip -->
+              <rect x="624" y="94" width="106" height="54" rx="8" fill="#0f172a" stroke="#a855f7" stroke-width="1.5"/>
+              <text x="677" y="118" text-anchor="middle" fill="#c084fc" font-size="12" font-weight="800">C# (.NET)</text>
+              <text x="677" y="136" text-anchor="middle" fill="#cbd5e1" font-size="10">関数ハンドラ</text>
+
+              <text x="618" y="172" text-anchor="middle" fill="#fed7aa" font-size="11" font-weight="700">リクエスト毎の独立実行・自動スケール</text>
+              <text x="618" y="190" text-anchor="middle" fill="#f97316" font-size="10" font-weight="700">クリックで解説</text>
+            </g>
+
+            <!-- Arrow: Lambda -> Backend -->
+            <line x1="748" y1="126" x2="806" y2="126" stroke="#10b981" stroke-width="2.5" marker-end="url(#det-arrow-emerald)"/>
+            <text x="777" y="114" text-anchor="middle" fill="#6ee7b7" font-size="11" font-weight="700">SDK/SQL</text>
+
+            <!-- Node 3: Backend (S3 / RDS / DynamoDB) -->
+            <g id="arch-node-backend" class="arch-node" onclick="selectArchNode('backend')">
+              <rect class="node-outline" x="812" y="60" width="212" height="132" rx="12" fill="rgba(16, 185, 129, 0.14)" stroke="#10b981" stroke-width="2"/>
+              <text x="918" y="88" text-anchor="middle" fill="#6ee7b7" font-size="14" font-weight="800">バックエンドリソース</text>
+
+              <rect x="828" y="100" width="180" height="32" rx="7" fill="#0f172a" stroke="#10b981" stroke-width="1.2"/>
+              <text x="918" y="121" text-anchor="middle" fill="#e2e8f0" font-size="12" font-weight="700">Amazon S3（ファイル）</text>
+
+              <rect x="828" y="140" width="180" height="32" rx="7" fill="#0f172a" stroke="#10b981" stroke-width="1.2"/>
+              <text x="918" y="161" text-anchor="middle" fill="#e2e8f0" font-size="12" font-weight="700">RDS / DynamoDB（DB）</text>
+
+              <text x="918" y="186" text-anchor="middle" fill="#10b981" font-size="10" font-weight="700">クリックで解説</text>
+            </g>
+
+            <!-- Dashed Arrows to CloudWatch -->
+            <line x1="340" y1="192" x2="340" y2="230" stroke="#a855f7" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#det-arrow-purple)"/>
+            <line x1="618" y1="200" x2="618" y2="230" stroke="#a855f7" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#det-arrow-purple)"/>
+            <text x="480" y="220" text-anchor="middle" fill="#d8b4fe" font-size="11" font-weight="600">実行ログ・メトリクスを自動送信</text>
+
+            <!-- Node 4: Amazon CloudWatch -->
+            <g id="arch-node-cloudwatch" class="arch-node" onclick="selectArchNode('cloudwatch')">
+              <rect class="node-outline" x="280" y="236" width="520" height="46" rx="10" fill="rgba(168, 85, 247, 0.16)" stroke="#a855f7" stroke-width="2"/>
+              <text x="540" y="264" text-anchor="middle" fill="#e9d5ff" font-size="13" font-weight="800">Amazon CloudWatch（ログ自動収集・メトリクス監視・エラー通知）</text>
+            </g>
+          </svg>
+        </div>
+
+        <!-- 下部インタラクティブ解説パネル -->
+        <div class="bg-[#1e293b]/95 rounded-2xl p-4 border border-slate-700 flex flex-col gap-3">
+          <!-- クイック選択タブ -->
+          <div class="flex flex-wrap items-center gap-2">
+            <button id="arch-btn-apigw" onclick="selectArchNode('apigw')" class="px-3 py-1 rounded-lg text-xs font-bold bg-cyan text-slate-950 transition-colors">API Gateway</button>
+            <button id="arch-btn-lambda" onclick="selectArchNode('lambda')" class="px-3 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition-colors">AWS Lambda</button>
+            <button id="arch-btn-backend" onclick="selectArchNode('backend')" class="px-3 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition-colors">S3 / RDS・DynamoDB</button>
+            <button id="arch-btn-cloudwatch" onclick="selectArchNode('cloudwatch')" class="px-3 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition-colors">CloudWatch</button>
+          </div>
+          <!-- 動的に切り替わる解説テキスト -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs sm:text-sm">
+            <div class="bg-[#0f172a] rounded-xl p-3 border border-slate-700/80">
+              <p class="text-[11px] font-bold text-cyan uppercase tracking-wider mb-1">
+                <i class="fa-solid fa-circle-info mr-1"></i><span id="arch-detail-title">Amazon API Gateway</span> の役割
+              </p>
+              <p id="arch-detail-role" class="text-slate-200 leading-relaxed">
+                クライアントからのHTTPSリクエストを受け付け、URLパスやHTTPメソッドに応じて適切なLambda関数へ振り分けます。認証・認可やアクセス制限（スロットリング）も入口で一括制御します。
+              </p>
+            </div>
+            <div class="bg-emerald/10 rounded-xl p-3 border border-emerald/30">
+              <p class="text-[11px] font-bold text-emerald uppercase tracking-wider mb-1">
+                <i class="fa-solid fa-sparkles mr-1"></i>開発メンバーの負荷が減るポイント
+              </p>
+              <p id="arch-detail-benefit" class="text-emerald-100 font-semibold leading-relaxed">
+                Nginxの設定ファイル管理やSSL証明書の更新作業が不要になります。認証やCORS設定も共通化できるため、各API側での重複実装が減ります。
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================================
+           SLIDE 4: 開発メンバーの負荷がどう減るか（Before / After）
+      ========================================================== -->
+      <section class="slide flex-col justify-between h-full w-full p-5 sm:p-8 md:p-10 bg-[#0f172a] overflow-y-auto" data-title="4. 開発メンバーの負荷がどう減るか">
+        <div class="flex flex-wrap items-end justify-between gap-2">
+          <div>
+            <span class="text-xs font-bold uppercase tracking-widest text-emerald">03 / Developer Experience</span>
+            <h2 class="text-xl sm:text-3xl font-black text-white mt-0.5">開発メンバーの負荷がどう減るか（Before / After）</h2>
+          </div>
+          <span class="text-xs font-bold px-3 py-1 rounded-full bg-emerald/15 text-emerald border border-emerald/35">
+            やらなくてよくなる 4 つの面倒ごと
+          </span>
+        </div>
+
+        <!-- 2x2 Before / After カード -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5 my-auto py-2">
+          <!-- 1) サーバー・インフラ管理 -->
+          <div class="bg-[#1e293b]/85 rounded-2xl p-4 sm:p-5 border border-slate-700/80 flex flex-col justify-between gap-2.5">
             <div class="flex items-center gap-2.5">
-              <span class="w-8 h-8 rounded-lg bg-sky-500/15 text-sky-400 flex items-center justify-center text-sm shrink-0">
+              <span class="w-8 h-8 rounded-lg bg-cyan/15 text-cyan flex items-center justify-center text-sm shrink-0">
                 <i class="fa-solid fa-wrench"></i>
               </span>
-              <h3 class="text-sm sm:text-base font-extrabold text-white">1. サーバー・ミドルウェア管理が不要</h3>
+              <h3 class="text-sm sm:text-base font-extrabold text-white">1. サーバー・インフラ管理</h3>
             </div>
             <div class="space-y-2 text-xs sm:text-sm">
-              <div class="flex items-start gap-2 text-slate-400 bg-slate-950/70 rounded-lg px-3 py-2 border border-slate-800">
+              <div class="flex items-start gap-2 text-slate-400 bg-[#0f172a] rounded-lg px-3 py-2 border border-slate-800">
                 <span class="shrink-0 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 mt-0.5">Before</span>
-                <span>OS更新、Nginx設定、SSL更新、プロセス監視</span>
+                <span>OSアップデート、Nginx設定、ディスク容量監視が必須</span>
               </div>
-              <div class="flex items-start gap-2 text-emerald-200 bg-emerald-500/10 rounded-lg px-3 py-2 border border-emerald-500/25">
-                <span class="shrink-0 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-emerald-500 text-slate-950 mt-0.5">After</span>
-                <span class="font-bold">AWSに完全お任せ。コードだけ書く</span>
+              <div class="flex items-start gap-2 text-emerald-100 bg-emerald/15 rounded-lg px-3 py-2 border border-emerald/30">
+                <span class="shrink-0 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-emerald text-slate-950 mt-0.5">After</span>
+                <span class="font-bold">すべてゼロ。AWSに任せてコードだけ書く</span>
               </div>
             </div>
           </div>
 
-          <!-- Card 2 -->
-          <div class="bg-slate-900/95 rounded-2xl p-4 sm:p-5 border border-slate-700/80 flex flex-col justify-between gap-2.5">
+          <!-- 2) デプロイの衝突・影響範囲 -->
+          <div class="bg-[#1e293b]/85 rounded-2xl p-4 sm:p-5 border border-slate-700/80 flex flex-col justify-between gap-2.5">
             <div class="flex items-center gap-2.5">
               <span class="w-8 h-8 rounded-lg bg-aws/15 text-aws flex items-center justify-center text-sm shrink-0">
                 <i class="fa-solid fa-rocket"></i>
               </span>
-              <h3 class="text-sm sm:text-base font-extrabold text-white">2. デプロイ・環境衝突のストレス減</h3>
+              <h3 class="text-sm sm:text-base font-extrabold text-white">2. デプロイの衝突・影響範囲</h3>
             </div>
             <div class="space-y-2 text-xs sm:text-sm">
-              <div class="flex items-start gap-2 text-slate-400 bg-slate-950/70 rounded-lg px-3 py-2 border border-slate-800">
+              <div class="flex items-start gap-2 text-slate-400 bg-[#0f172a] rounded-lg px-3 py-2 border border-slate-800">
                 <span class="shrink-0 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 mt-0.5">Before</span>
-                <span>サーバーログイン、ポート競合、依存パッケージ衝突に注意</span>
+                <span>同一サーバー上の他メンバーの修正で自分のAPIが止まるリスク</span>
               </div>
-              <div class="flex items-start gap-2 text-emerald-200 bg-emerald-500/10 rounded-lg px-3 py-2 border border-emerald-500/25">
-                <span class="shrink-0 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-emerald-500 text-slate-950 mt-0.5">After</span>
-                <span class="font-bold">API単位で独立デプロイ。他APIへの影響ゼロ</span>
+              <div class="flex items-start gap-2 text-emerald-100 bg-emerald/15 rounded-lg px-3 py-2 border border-emerald/30">
+                <span class="shrink-0 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-emerald text-slate-950 mt-0.5">After</span>
+                <span class="font-bold">関数単位で独立デプロイ。他APIへの影響ゼロ</span>
               </div>
             </div>
           </div>
 
-          <!-- Card 3 -->
-          <div class="bg-slate-900/95 rounded-2xl p-4 sm:p-5 border border-slate-700/80 flex flex-col justify-between gap-2.5">
+          <!-- 3) 障害対応・再起動 -->
+          <div class="bg-[#1e293b]/85 rounded-2xl p-4 sm:p-5 border border-slate-700/80 flex flex-col justify-between gap-2.5">
             <div class="flex items-center gap-2.5">
-              <span class="w-8 h-8 rounded-lg bg-sky-500/15 text-sky-400 flex items-center justify-center text-sm shrink-0">
+              <span class="w-8 h-8 rounded-lg bg-purple/15 text-purple flex items-center justify-center text-sm shrink-0">
                 <i class="fa-solid fa-heart-pulse"></i>
               </span>
-              <h3 class="text-sm sm:text-base font-extrabold text-white">3. スケール・障害対応の心理的負荷減</h3>
+              <h3 class="text-sm sm:text-base font-extrabold text-white">3. 障害対応・再起動</h3>
             </div>
             <div class="space-y-2 text-xs sm:text-sm">
-              <div class="flex items-start gap-2 text-slate-400 bg-slate-950/70 rounded-lg px-3 py-2 border border-slate-800">
+              <div class="flex items-start gap-2 text-slate-400 bg-[#0f172a] rounded-lg px-3 py-2 border border-slate-800">
                 <span class="shrink-0 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 mt-0.5">Before</span>
-                <span>負荷増によるスペック検討やプロセス落ちの心配</span>
+                <span>プロセス落ちの手動復旧、急負荷時の夜間スペック対応</span>
               </div>
-              <div class="flex items-start gap-2 text-emerald-200 bg-emerald-500/10 rounded-lg px-3 py-2 border border-emerald-500/25">
-                <span class="shrink-0 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-emerald-500 text-slate-950 mt-0.5">After</span>
-                <span class="font-bold">自動スケール＆リクエストごとの独立実行で安心</span>
+              <div class="flex items-start gap-2 text-emerald-100 bg-emerald/15 rounded-lg px-3 py-2 border border-emerald/30">
+                <span class="shrink-0 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-emerald text-slate-950 mt-0.5">After</span>
+                <span class="font-bold">自動スケール＆リクエスト毎の独立実行で復旧作業から解放</span>
               </div>
             </div>
           </div>
 
-          <!-- Card 4 -->
-          <div class="bg-slate-900/95 rounded-2xl p-4 sm:p-5 border border-slate-700/80 flex flex-col justify-between gap-2.5">
+          <!-- 4) 学習・環境構築コスト -->
+          <div class="bg-[#1e293b]/85 rounded-2xl p-4 sm:p-5 border border-slate-700/80 flex flex-col justify-between gap-2.5">
             <div class="flex items-center gap-2.5">
-              <span class="w-8 h-8 rounded-lg bg-aws/15 text-aws flex items-center justify-center text-sm shrink-0">
+              <span class="w-8 h-8 rounded-lg bg-cyan/15 text-cyan flex items-center justify-center text-sm shrink-0">
                 <i class="fa-solid fa-graduation-cap"></i>
               </span>
-              <h3 class="text-sm sm:text-base font-extrabold text-white">4. 学習コストの削減</h3>
+              <h3 class="text-sm sm:text-base font-extrabold text-white">4. 学習・環境構築コスト</h3>
             </div>
             <div class="space-y-2 text-xs sm:text-sm">
-              <div class="flex items-start gap-2 text-slate-400 bg-slate-950/70 rounded-lg px-3 py-2 border border-slate-800">
+              <div class="flex items-start gap-2 text-slate-400 bg-[#0f172a] rounded-lg px-3 py-2 border border-slate-800">
                 <span class="shrink-0 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 mt-0.5">Before</span>
-                <span>基盤に合わせて言語を統一する必要がある</span>
+                <span>基盤に合わせて言語統一や複雑なフレームワーク設定が必要</span>
               </div>
-              <div class="flex items-start gap-2 text-emerald-200 bg-emerald-500/10 rounded-lg px-3 py-2 border border-emerald-500/25">
-                <span class="shrink-0 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-emerald-500 text-slate-950 mt-0.5">After</span>
-                <span class="font-bold">Python / C# どちらでもOK。慣れた言語でそのまま開発</span>
+              <div class="flex items-start gap-2 text-emerald-100 bg-emerald/15 rounded-lg px-3 py-2 border border-emerald/30">
+                <span class="shrink-0 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-emerald text-slate-950 mt-0.5">After</span>
+                <span class="font-bold">自分の得意言語（Python / C#）で単一関数を書くだけ</span>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- 下部強調メッセージ -->
-        <div class="bg-gradient-to-r from-aws/20 via-amber-500/15 to-sky-500/15 border border-aws/40 rounded-xl px-5 py-3 flex items-center justify-center gap-3 text-center">
+        <!-- 強調バー -->
+        <div class="bg-gradient-to-r from-aws/20 via-cyan/15 to-emerald/15 border border-aws/40 rounded-xl px-5 py-2.5 flex items-center justify-center gap-3 text-center">
           <i class="fa-solid fa-bolt text-aws text-lg shrink-0"></i>
-          <p class="text-sm sm:text-base font-black text-white">
-            「インフラを動かすための作業」を捨てて、<span class="text-aws">「業務ロジックの実装」に100%集中</span>できる。
+          <p class="text-xs sm:text-base font-black text-white">
+            「インフラを動かすための雑務」を手放し、<span class="text-aws">本来やりたかった業務ロジック実装に集中</span>できます。
           </p>
         </div>
       </section>
 
       <!-- =========================================================
-           SLIDE 4: 現状（EC2 + FastAPI）との比較表
+           SLIDE 5: EC2 + FastAPI との比較表
       ========================================================== -->
-      <section class="slide flex-col justify-between h-full w-full p-6 sm:p-9 md:p-11 bg-[#0B1120] overflow-y-auto" data-title="現状（EC2 + FastAPI）との比較表">
+      <section class="slide flex-col justify-between h-full w-full p-5 sm:p-8 md:p-10 bg-[#0f172a] overflow-y-auto" data-title="5. EC2 + FastAPI との比較表">
         <div>
-          <span class="text-xs font-bold uppercase tracking-widest text-sky-400">03 / Comparison</span>
-          <h2 class="text-2xl sm:text-3xl font-black text-white mt-1">現状（EC2 + FastAPI）との比較表</h2>
+          <span class="text-xs font-bold uppercase tracking-widest text-cyan">04 / Comparison Table</span>
+          <h2 class="text-xl sm:text-3xl font-black text-white mt-0.5">EC2 + FastAPI との比較表</h2>
         </div>
 
         <div class="my-auto overflow-x-auto rounded-2xl border border-slate-700/80 shadow-xl">
           <table class="w-full text-left border-collapse">
             <thead>
-              <tr class="bg-slate-800/90 text-xs sm:text-sm border-b border-slate-700">
+              <tr class="bg-[#1e293b] text-xs sm:text-sm border-b border-slate-700">
                 <th class="py-3.5 px-4 sm:px-5 font-bold text-slate-300 w-[20%]">比較項目</th>
-                <th class="py-3.5 px-4 sm:px-5 font-bold text-slate-400 w-[38%]">現状：EC2 + FastAPI</th>
-                <th class="py-3.5 px-4 sm:px-5 font-black text-aws w-[42%] bg-aws/10">
+                <th class="py-3.5 px-4 sm:px-5 font-bold text-slate-400 w-[37%]">現状：EC2 + FastAPI</th>
+                <th class="py-3.5 px-4 sm:px-5 font-black text-aws w-[43%] bg-aws/10">
                   <i class="fa-solid fa-bolt mr-1.5"></i>サーバーレス：API GW + Lambda
                 </th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-800 text-xs sm:text-sm bg-slate-900/90">
+            <tbody class="divide-y divide-slate-800 text-xs sm:text-sm bg-[#0f172a]">
               <tr class="hover:bg-slate-800/40 transition-colors">
-                <td class="py-3.5 px-4 sm:px-5 font-bold text-slate-200 bg-slate-900">開発者の運用負荷</td>
-                <td class="py-3.5 px-4 sm:px-5 text-slate-400">OS更新・Nginx設定・監視が必要</td>
+                <td class="py-3.5 px-4 sm:px-5 font-bold text-slate-200 bg-[#1e293b]/40">運用・保守負荷</td>
+                <td class="py-3.5 px-4 sm:px-5 text-slate-400">OS更新・Nginx設定・プロセス監視が必要</td>
                 <td class="py-3.5 px-4 sm:px-5 bg-aws/5">
-                  <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 mr-2">極小</span>
-                  <span class="font-bold text-white">インフラ管理不要（コードのみ）</span>
+                  <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-black bg-emerald/20 text-emerald border border-emerald/40 mr-2">運用負荷：極小</span>
+                  <span class="font-bold text-white">コード管理のみ</span>
                 </td>
               </tr>
               <tr class="hover:bg-slate-800/40 transition-colors">
-                <td class="py-3.5 px-4 sm:px-5 font-bold text-slate-200 bg-slate-900">デプロイ粒度</td>
-                <td class="py-3.5 px-4 sm:px-5 text-slate-400">アプリ全体を一括リリース</td>
-                <td class="py-3.5 px-4 sm:px-5 bg-aws/5 font-bold text-slate-100">API・機能単位で独立デプロイ</td>
-              </tr>
-              <tr class="hover:bg-slate-800/40 transition-colors">
-                <td class="py-3.5 px-4 sm:px-5 font-bold text-slate-200 bg-slate-900">対応言語</td>
-                <td class="py-3.5 px-4 sm:px-5 text-slate-400">環境ごとにランタイム固定</td>
-                <td class="py-3.5 px-4 sm:px-5 bg-aws/5">
-                  <span class="font-bold text-sky-300">Python / C# 混在OK</span>（関数ごとに選択）
-                </td>
-              </tr>
-              <tr class="hover:bg-slate-800/40 transition-colors">
-                <td class="py-3.5 px-4 sm:px-5 font-bold text-slate-200 bg-slate-900">コスト構造</td>
-                <td class="py-3.5 px-4 sm:px-5 text-slate-400">24時間常時課金（待機時も発生）</td>
-                <td class="py-3.5 px-4 sm:px-5 bg-aws/5">
-                  <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-black bg-aws/20 text-aws border border-aws/30 mr-2">高効率</span>
-                  <span class="font-bold text-white">実行回数・時間のみの従量課金</span>
-                </td>
-              </tr>
-              <tr class="hover:bg-slate-800/40 transition-colors">
-                <td class="py-3.5 px-4 sm:px-5 font-bold text-slate-200 bg-slate-900">スケーリング</td>
-                <td class="py-3.5 px-4 sm:px-5 text-slate-400">手動増強 / Auto Scaling設定</td>
+                <td class="py-3.5 px-4 sm:px-5 font-bold text-slate-200 bg-[#1e293b]/40">スケーリング</td>
+                <td class="py-3.5 px-4 sm:px-5 text-slate-400">手動増強 または Auto Scaling 構築</td>
                 <td class="py-3.5 px-4 sm:px-5 bg-aws/5 font-bold text-slate-100">リクエスト量に応じ秒単位で完全自動</td>
               </tr>
               <tr class="hover:bg-slate-800/40 transition-colors">
-                <td class="py-3.5 px-4 sm:px-5 font-bold text-slate-200 bg-slate-900">向いている用途</td>
-                <td class="py-3.5 px-4 sm:px-5 text-slate-400">常時高負荷・長時間同期処理</td>
-                <td class="py-3.5 px-4 sm:px-5 bg-aws/5 font-bold text-slate-100">波がある社内API・小〜中規模API</td>
+                <td class="py-3.5 px-4 sm:px-5 font-bold text-slate-200 bg-[#1e293b]/40">課金体系（コスト）</td>
+                <td class="py-3.5 px-4 sm:px-5 text-slate-400">24時間常時課金（待機中も発生）</td>
+                <td class="py-3.5 px-4 sm:px-5 bg-aws/5">
+                  <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-black bg-aws/20 text-aws border border-aws/40 mr-2">使った分だけ</span>
+                  <span class="font-bold text-white">夜間・休日は実質0円</span>
+                </td>
+              </tr>
+              <tr class="hover:bg-slate-800/40 transition-colors">
+                <td class="py-3.5 px-4 sm:px-5 font-bold text-slate-200 bg-[#1e293b]/40">デプロイ単位</td>
+                <td class="py-3.5 px-4 sm:px-5 text-slate-400">アプリ全体を一括リリース</td>
+                <td class="py-3.5 px-4 sm:px-5 bg-aws/5 font-bold text-slate-100">API・機能単位で独立リリース</td>
+              </tr>
+              <tr class="hover:bg-slate-800/40 transition-colors">
+                <td class="py-3.5 px-4 sm:px-5 font-bold text-slate-200 bg-[#1e293b]/40">対応言語</td>
+                <td class="py-3.5 px-4 sm:px-5 text-slate-400">環境ごとにランタイム固定</td>
+                <td class="py-3.5 px-4 sm:px-5 bg-aws/5">
+                  <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-black bg-cyan/20 text-cyan border border-cyan/40 mr-2">混在OK</span>
+                  <span class="font-bold text-white">Python / C# を関数毎に選択</span>
+                </td>
+              </tr>
+              <tr class="hover:bg-slate-800/40 transition-colors">
+                <td class="py-3.5 px-4 sm:px-5 font-bold text-slate-200 bg-[#1e293b]/40">向いている処理</td>
+                <td class="py-3.5 px-4 sm:px-5 text-slate-400">常時高負荷・長時間同期処理・WebSocket</td>
+                <td class="py-3.5 px-4 sm:px-5 bg-aws/5 font-bold text-slate-100">CRUD API・社内ツール・Webhook・波のある負荷</td>
               </tr>
             </tbody>
           </table>
         </div>
 
         <p class="text-xs text-slate-400 text-right">
-          ※ 特に「運用負荷の低さ」と「待機時コストゼロ」が開発チームにとって大きな強みになります
+          ※ AWS Lambda には毎月100万リクエストの無料枠もあり、社内APIや小規模検証はほぼ無料で始められます
         </p>
       </section>
 
       <!-- =========================================================
-           SLIDE 5: チームにもたらす3つのメリット
+           SLIDE 6: マルチ言語開発のメリット（Python & C# 両対応）
       ========================================================== -->
-      <section class="slide flex-col justify-between h-full w-full p-6 sm:p-9 md:p-11 bg-[#0B1120] overflow-y-auto" data-title="チームにもたらす3つのメリット">
+      <section class="slide flex-col justify-between h-full w-full p-5 sm:p-8 md:p-10 bg-[#0f172a] overflow-y-auto" data-title="6. マルチ言語開発のメリット（Python &amp; C#）">
         <div>
-          <span class="text-xs font-bold uppercase tracking-widest text-sky-400">04 / Team Benefits</span>
-          <h2 class="text-2xl sm:text-3xl font-black text-white mt-1">チームにもたらす 3 つのメリット</h2>
+          <span class="text-xs font-bold uppercase tracking-widest text-purple">05 / Polyglot Development</span>
+          <h2 class="text-xl sm:text-3xl font-black text-white mt-0.5">マルチ言語開発：Python も C# もそのまま即戦力</h2>
+          <p class="text-xs sm:text-sm text-slate-400 mt-1">
+            新しい言語を覚え直す必要はありません。API単位で最適なランタイムを選べるため、チーム全員のスキルを最大限に活かせます。
+          </p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 my-auto py-4">
-          <!-- メリット 1 -->
-          <div class="bg-slate-900/95 rounded-2xl p-6 border border-slate-700/80 flex flex-col justify-between">
+        <!-- 2カラム比較カード -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 my-auto py-2">
+          <!-- Python カード -->
+          <div class="bg-[#1e293b]/80 rounded-2xl p-6 border-2 border-cyan/45 flex flex-col justify-between">
             <div>
-              <div class="flex items-center justify-between mb-5">
-                <div class="w-12 h-12 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center justify-center text-2xl">
-                  <i class="fa-solid fa-shield-halved"></i>
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-12 h-12 rounded-xl bg-cyan/15 text-cyan border border-cyan/35 flex items-center justify-center text-2xl">
+                    <i class="fa-brands fa-python"></i>
+                  </div>
+                  <div>
+                    <h3 class="text-lg sm:text-xl font-black text-white">Python 3.x ランタイム</h3>
+                    <p class="text-xs font-bold text-cyan">スピード開発・データ活用に強い</p>
+                  </div>
                 </div>
-                <span class="text-3xl font-black text-slate-800">01</span>
               </div>
-              <h3 class="text-lg sm:text-xl font-extrabold text-white mb-3">運用・保守コストの<br>劇的削減</h3>
-              <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                OSのセキュリティパッチ適用、証明書更新、サーバー死活監視などの定常運用から解放され、開発にリソースを割けます。
-              </p>
+              <ul class="space-y-2.5 text-xs sm:text-sm text-slate-200">
+                <li class="flex items-start gap-2.5">
+                  <i class="fa-solid fa-check text-cyan mt-1 shrink-0"></i>
+                  <span><strong>データ処理・AI連携</strong>（pandas や生成AI SDKとの高い親和性）</span>
+                </li>
+                <li class="flex items-start gap-2.5">
+                  <i class="fa-solid fa-check text-cyan mt-1 shrink-0"></i>
+                  <span><strong>既存の FastAPI 資産</strong>も <code class="px-1.5 py-0.5 rounded bg-[#0f172a] font-mono text-xs text-aws">mangum</code> 経由で流用可能</span>
+                </li>
+                <li class="flex items-start gap-2.5">
+                  <i class="fa-solid fa-check text-cyan mt-1 shrink-0"></i>
+                  <span>軽量スクリプトで<strong>コールドスタートも高速</strong></span>
+                </li>
+              </ul>
             </div>
-            <div class="mt-5 pt-3 border-t border-slate-800 text-xs font-bold text-emerald-400">
-              <i class="fa-solid fa-check mr-1"></i> インフラ保守ほぼゼロ
+            <div class="mt-4 pt-3 border-t border-slate-700/80 text-xs font-bold text-cyan">
+              向いているAPI例：集計API、生成AI連携、軽量な社内Webhook
             </div>
           </div>
 
-          <!-- メリット 2 -->
-          <div class="bg-slate-900/95 rounded-2xl p-6 border-2 border-aws/50 shadow-lg shadow-aws/5 flex flex-col justify-between">
+          <!-- C# カード -->
+          <div class="bg-[#1e293b]/80 rounded-2xl p-6 border-2 border-purple/45 flex flex-col justify-between">
             <div>
-              <div class="flex items-center justify-between mb-5">
-                <div class="w-12 h-12 rounded-xl bg-aws/15 text-aws border border-aws/30 flex items-center justify-center text-2xl">
-                  <i class="fa-solid fa-code"></i>
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-12 h-12 rounded-xl bg-purple/15 text-purple border border-purple/35 flex items-center justify-center text-2xl">
+                    <i class="fa-solid fa-code"></i>
+                  </div>
+                  <div>
+                    <h3 class="text-lg sm:text-xl font-black text-white">C# (.NET) ランタイム</h3>
+                    <p class="text-xs font-bold text-purple">堅牢な業務ロジック・既存資産流用に強い</p>
+                  </div>
                 </div>
-                <span class="text-3xl font-black text-aws/25">02</span>
               </div>
-              <h3 class="text-lg sm:text-xl font-extrabold text-white mb-3">Python / C# どちらでも<br>開発可能</h3>
-              <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                メンバーの既存スキルをそのまま活用。APIごとに適材適所で言語を選べるため、全員が即戦力で参加できます。
-              </p>
+              <ul class="space-y-2.5 text-xs sm:text-sm text-slate-200">
+                <li class="flex items-start gap-2.5">
+                  <i class="fa-solid fa-check text-purple mt-1 shrink-0"></i>
+                  <span><strong>既存C#業務ロジック・DLL資産</strong>をそのままクラウドAPI化</span>
+                </li>
+                <li class="flex items-start gap-2.5">
+                  <i class="fa-solid fa-check text-purple mt-1 shrink-0"></i>
+                  <span><strong>強力な静的型付け</strong>と Visual Studio / Rider での快適な開発</span>
+                </li>
+                <li class="flex items-start gap-2.5">
+                  <i class="fa-solid fa-check text-purple mt-1 shrink-0"></i>
+                  <span><strong>.NET Native AOT</strong> 活用で起動速度も大幅に改善</span>
+                </li>
+              </ul>
             </div>
-            <div class="mt-5 pt-3 border-t border-slate-800 flex gap-2">
-              <span class="text-xs font-bold px-2.5 py-1 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30"><i class="fa-brands fa-python mr-1"></i>Python</span>
-              <span class="text-xs font-bold px-2.5 py-1 rounded bg-purple-500/15 text-purple-300 border border-purple-500/30"><i class="fa-solid fa-cube mr-1"></i>C# (.NET)</span>
-            </div>
-          </div>
-
-          <!-- メリット 3 -->
-          <div class="bg-slate-900/95 rounded-2xl p-6 border border-slate-700/80 flex flex-col justify-between">
-            <div>
-              <div class="flex items-center justify-between mb-5">
-                <div class="w-12 h-12 rounded-xl bg-sky-500/15 text-sky-400 border border-sky-500/30 flex items-center justify-center text-2xl">
-                  <i class="fa-solid fa-chart-line"></i>
-                </div>
-                <span class="text-3xl font-black text-slate-800">03</span>
-              </div>
-              <h3 class="text-lg sm:text-xl font-extrabold text-white mb-3">使った分だけの従量課金<br>＆ 自動スケール</h3>
-              <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                アクセスのない夜間・休日は<strong class="text-aws">実質0円</strong>。想定外のアクセス集中時もAWSが自動で並列スケールします。
-              </p>
-            </div>
-            <div class="mt-5 pt-3 border-t border-slate-800 text-xs font-bold text-sky-400">
-              <i class="fa-solid fa-check mr-1"></i> 夜間・休日0円 / 急負荷も安心
+            <div class="mt-4 pt-3 border-t border-slate-700/80 text-xs font-bold text-purple">
+              向いているAPI例：基幹業務連携API、複雑な業務計算、型安全なCRUD
             </div>
           </div>
         </div>
 
-        <div class="h-1"></div>
+        <!-- 共通エンドポイント図解バー -->
+        <div class="bg-[#1e293b]/90 border border-slate-700 rounded-xl px-5 py-3 flex flex-wrap items-center justify-center gap-3 text-xs sm:text-sm font-bold">
+          <span class="px-3 py-1 rounded-lg bg-cyan/15 text-cyan border border-cyan/30">API Gateway（統一URL）</span>
+          <i class="fa-solid fa-arrow-right text-slate-500"></i>
+          <span class="px-3 py-1 rounded-lg bg-[#0f172a] text-cyan border border-slate-700">/ai-summary → Python</span>
+          <span class="text-slate-500">＋</span>
+          <span class="px-3 py-1 rounded-lg bg-[#0f172a] text-purple border border-slate-700">/orders → C# (.NET)</span>
+          <span class="text-slate-300 font-medium ml-1">※ クライアントからは同じ1つのAPIに見える！</span>
+        </div>
       </section>
 
       <!-- =========================================================
-           SLIDE 6: 実装イメージ（Python / C# 切り替えタブ＋コピー）
+           SLIDE 7: 実装イメージ（Python / C# コード比較）
       ========================================================== -->
-      <section class="slide flex-col justify-between h-full w-full p-6 sm:p-9 md:p-11 bg-[#0B1120] overflow-y-auto" data-title="実装イメージ（Python / C#）">
+      <section class="slide flex-col justify-between h-full w-full p-5 sm:p-8 md:p-10 bg-[#0f172a] overflow-y-auto" data-title="7. 実装イメージ（Python / C# コード比較）">
         <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
           <div>
-            <span class="text-xs font-bold uppercase tracking-widest text-sky-400">05 / Code Example</span>
-            <h2 class="text-2xl sm:text-3xl font-black text-white mt-1">実装イメージ：サーバー設定なし、関数を書くだけ</h2>
+            <span class="text-xs font-bold uppercase tracking-widest text-cyan">06 / Code Comparison</span>
+            <h2 class="text-xl sm:text-3xl font-black text-white mt-0.5">実装イメージ：入力を受け取り、JSONを返すだけ</h2>
           </div>
 
           <!-- 言語切り替えタブ -->
-          <div class="inline-flex bg-slate-800 p-1 rounded-xl border border-slate-700 self-start sm:self-auto" role="tablist">
-            <button id="tab-python" onclick="switchCodeTab('python')" class="px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all bg-sky-500 text-slate-950 shadow-sm flex items-center gap-2">
+          <div class="inline-flex bg-[#1e293b] p-1 rounded-xl border border-slate-700 self-start sm:self-auto" role="tablist">
+            <button id="tab-python" onclick="switchCodeTab('python')" class="px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all bg-cyan text-slate-950 shadow-sm flex items-center gap-2">
               <i class="fa-brands fa-python"></i> Python
             </button>
             <button id="tab-csharp" onclick="switchCodeTab('csharp')" class="px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all text-slate-300 hover:text-white flex items-center gap-2">
@@ -488,128 +727,128 @@
         </div>
 
         <!-- コードエリア -->
-        <div class="my-auto pt-3 flex-1 flex flex-col justify-center">
+        <div class="my-auto pt-2 flex-1 flex flex-col justify-center">
           <!-- Python パネル -->
           <div id="panel-python" class="space-y-3">
-            <div class="bg-[#060A14] rounded-2xl overflow-hidden border border-slate-700/90 shadow-xl">
-              <div class="flex items-center justify-between px-4 py-2.5 bg-slate-800/80 border-b border-slate-700 text-xs text-slate-300 font-mono">
-                <span class="flex items-center gap-2"><i class="fa-brands fa-python text-sky-400"></i> lambda_function.py</span>
+            <div class="bg-[#020617] rounded-2xl overflow-hidden border border-slate-700/90 shadow-xl">
+              <div class="flex items-center justify-between px-4 py-2.5 bg-[#1e293b] border-b border-slate-700 text-xs text-slate-300 font-mono">
+                <span class="flex items-center gap-2"><i class="fa-brands fa-python text-cyan"></i> lambda_function.py（Python 3.x / 型ヒント付き）</span>
                 <button onclick="copyCode('code-python', this)" class="px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 transition-colors font-sans font-semibold">
                   <i class="fa-regular fa-copy mr-1"></i>コピー
                 </button>
               </div>
-              <pre id="code-python" class="p-4 sm:p-5 text-xs sm:text-sm font-mono text-slate-100 overflow-x-auto leading-relaxed"><code><span class="text-sky-400">import</span> json
-<span class="text-sky-400">from</span> typing <span class="text-sky-400">import</span> Any
+              <pre id="code-python" class="p-4 sm:p-5 text-xs sm:text-sm font-mono text-slate-100 overflow-x-auto leading-relaxed"><code><span class="text-cyan">import</span> json
+<span class="text-cyan">from</span> typing <span class="text-cyan">import</span> Any
 
-<span class="text-sky-400">def</span> <span class="text-amber-300">lambda_handler</span>(event: <span class="text-sky-300">dict</span>[<span class="text-sky-300">str</span>, Any], context: Any) -> <span class="text-sky-300">dict</span>[<span class="text-sky-300">str</span>, Any]:
+<span class="text-cyan">def</span> <span class="text-amber-300">lambda_handler</span>(event: <span class="text-sky-300">dict</span>[<span class="text-sky-300">str</span>, Any], context: Any) -> <span class="text-sky-300">dict</span>[<span class="text-sky-300">str</span>, Any]:
     <span class="text-slate-400"># クエリパラメータを取得（例: GET /hello?name=DevTeam）</span>
-    params = event.get(<span class="text-emerald-300">"queryStringParameters"</span>) <span class="text-sky-400">or</span> {}
+    params = event.get(<span class="text-emerald-300">"queryStringParameters"</span>) <span class="text-cyan">or</span> {}
     name = params.get(<span class="text-emerald-300">"name"</span>, <span class="text-emerald-300">"World"</span>)
 
-    <span class="text-sky-400">return</span> {
+    <span class="text-cyan">return</span> {
         <span class="text-emerald-300">"statusCode"</span>: <span class="text-orange-300">200</span>,
         <span class="text-emerald-300">"headers"</span>: {<span class="text-emerald-300">"Content-Type"</span>: <span class="text-emerald-300">"application/json"</span>},
         <span class="text-emerald-300">"body"</span>: json.dumps({<span class="text-emerald-300">"message"</span>: <span class="text-emerald-300">f"Hello, {name}!"</span>}, ensure_ascii=<span class="text-orange-300">False</span>),
     }</code></pre>
             </div>
-            <div class="bg-sky-500/10 border border-sky-500/30 rounded-xl px-4 py-2.5 flex items-center gap-3 text-xs sm:text-sm text-sky-200">
-              <i class="fa-solid fa-circle-info text-sky-400 shrink-0"></i>
-              <p>NginxやUvicornの起動設定は一切不要。既存の FastAPI アプリを動かしたい場合も <code class="px-1.5 py-0.5 bg-slate-900 rounded font-mono text-xs text-aws">mangum</code> 1行で対応可能です。</p>
+            <div class="bg-cyan/10 border border-cyan/30 rounded-xl px-4 py-2.5 flex items-center gap-3 text-xs sm:text-sm text-sky-100">
+              <i class="fa-solid fa-sparkles text-cyan shrink-0"></i>
+              <p><strong>フレームワークの複雑な設定なし！</strong> 入力（<code class="font-mono text-xs text-aws">event</code>）を受け取って出力（JSON）を返すだけでHTTPS APIとして公開されます。</p>
             </div>
           </div>
 
           <!-- C# パネル -->
           <div id="panel-csharp" class="hidden space-y-3">
-            <div class="bg-[#060A14] rounded-2xl overflow-hidden border border-slate-700/90 shadow-xl">
-              <div class="flex items-center justify-between px-4 py-2.5 bg-slate-800/80 border-b border-slate-700 text-xs text-slate-300 font-mono">
-                <span class="flex items-center gap-2"><i class="fa-solid fa-code text-aws"></i> Function.cs (.NET)</span>
+            <div class="bg-[#020617] rounded-2xl overflow-hidden border border-slate-700/90 shadow-xl">
+              <div class="flex items-center justify-between px-4 py-2.5 bg-[#1e293b] border-b border-slate-700 text-xs text-slate-300 font-mono">
+                <span class="flex items-center gap-2"><i class="fa-solid fa-code text-purple"></i> Function.cs（C# .NET）</span>
                 <button onclick="copyCode('code-csharp', this)" class="px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 transition-colors font-sans font-semibold">
                   <i class="fa-regular fa-copy mr-1"></i>コピー
                 </button>
               </div>
-              <pre id="code-csharp" class="p-4 sm:p-5 text-xs sm:text-sm font-mono text-slate-100 overflow-x-auto leading-relaxed"><code><span class="text-sky-400">using</span> System.Text.Json;
-<span class="text-sky-400">using</span> Amazon.Lambda.APIGatewayEvents;
-<span class="text-sky-400">using</span> Amazon.Lambda.Core;
+              <pre id="code-csharp" class="p-4 sm:p-5 text-xs sm:text-sm font-mono text-slate-100 overflow-x-auto leading-relaxed"><code><span class="text-cyan">using</span> System.Text.Json;
+<span class="text-cyan">using</span> Amazon.Lambda.APIGatewayEvents;
+<span class="text-cyan">using</span> Amazon.Lambda.Core;
 
-<span class="text-sky-400">public class</span> <span class="text-amber-300">Function</span>
+<span class="text-cyan">public class</span> <span class="text-amber-300">Function</span>
 {
-    <span class="text-sky-400">public</span> APIGatewayProxyResponse <span class="text-amber-300">FunctionHandler</span>(
+    <span class="text-cyan">public</span> APIGatewayProxyResponse <span class="text-amber-300">FunctionHandler</span>(
         APIGatewayProxyRequest request, ILambdaContext context)
     {
-        <span class="text-sky-400">var</span> name = request.QueryStringParameters?.GetValueOrDefault(<span class="text-emerald-300">"name"</span>) ?? <span class="text-emerald-300">"World"</span>;
+        <span class="text-cyan">var</span> name = request.QueryStringParameters?.GetValueOrDefault(<span class="text-emerald-300">"name"</span>) ?? <span class="text-emerald-300">"World"</span>;
 
-        <span class="text-sky-400">return new</span> APIGatewayProxyResponse
+        <span class="text-cyan">return new</span> APIGatewayProxyResponse
         {
             StatusCode = <span class="text-orange-300">200</span>,
-            Headers = <span class="text-sky-400">new</span> Dictionary&lt;<span class="text-sky-300">string</span>, <span class="text-sky-300">string</span>&gt; { [<span class="text-emerald-300">"Content-Type"</span>] = <span class="text-emerald-300">"application/json"</span> },
-            Body = JsonSerializer.Serialize(<span class="text-sky-400">new</span> { message = <span class="text-emerald-300">$"Hello, {name}!"</span> })
+            Headers = <span class="text-cyan">new</span> Dictionary&lt;<span class="text-sky-300">string</span>, <span class="text-sky-300">string</span>&gt; { [<span class="text-emerald-300">"Content-Type"</span>] = <span class="text-emerald-300">"application/json"</span> },
+            Body = JsonSerializer.Serialize(<span class="text-cyan">new</span> { message = <span class="text-emerald-300">$"Hello, {name}!"</span> })
         };
     }
 }</code></pre>
             </div>
-            <div class="bg-aws/10 border border-aws/30 rounded-xl px-4 py-2.5 flex items-center gap-3 text-xs sm:text-sm text-amber-100">
-              <i class="fa-solid fa-bolt text-aws shrink-0"></i>
-              <p>C# の静的型付けや既存ライブラリをそのまま活用可能。ASP.NET Core の Minimal API をそのまま Lambda 化することもできます。</p>
+            <div class="bg-purple/15 border border-purple/35 rounded-xl px-4 py-2.5 flex items-center gap-3 text-xs sm:text-sm text-purple-100">
+              <i class="fa-solid fa-sparkles text-purple shrink-0"></i>
+              <p><strong>サーバー起動コード不要！</strong> リクエスト（<code class="font-mono text-xs text-aws">APIGatewayProxyRequest</code>）を受け取り、レスポンスを返すだけで完結します。</p>
             </div>
           </div>
         </div>
       </section>
 
       <!-- =========================================================
-           SLIDE 7: 導入時の注意点・制約
+           SLIDE 8: 導入時の注意点・制約
       ========================================================== -->
-      <section class="slide flex-col justify-between h-full w-full p-6 sm:p-9 md:p-11 bg-[#0B1120] overflow-y-auto" data-title="導入時の注意点・制約">
+      <section class="slide flex-col justify-between h-full w-full p-5 sm:p-8 md:p-10 bg-[#0f172a] overflow-y-auto" data-title="8. 導入時の注意点・制約">
         <div>
-          <span class="text-xs font-bold uppercase tracking-widest text-aws">06 / Good to Know</span>
-          <h2 class="text-2xl sm:text-3xl font-black text-white mt-1">押さえておけば問題ない 3 つの制約</h2>
-          <p class="text-xs sm:text-sm text-slate-400 mt-1">仕組みの特徴をあらかじめ知っておくだけで、設計時のつまずきを防げます。</p>
+          <span class="text-xs font-bold uppercase tracking-widest text-aws">07 / Constraints &amp; Solutions</span>
+          <h2 class="text-xl sm:text-3xl font-black text-white mt-0.5">実務で知っておくべき 3 つの制約と対策</h2>
+          <p class="text-xs sm:text-sm text-slate-400 mt-1">仕組み上のルールを最初に押さえておけば、設計時に迷うことはありません。</p>
         </div>
 
-        <div class="space-y-4 my-auto py-3">
-          <!-- 注意点 1 -->
-          <div class="bg-slate-900/95 rounded-2xl p-5 border border-slate-700/80 flex items-start gap-4 sm:gap-5">
-            <div class="shrink-0 w-12 h-12 rounded-xl bg-sky-500/15 text-sky-400 border border-sky-500/30 flex items-center justify-center text-xl">
-              <i class="fa-solid fa-snowflake"></i>
-            </div>
-            <div class="flex-1">
-              <div class="flex flex-wrap items-center gap-2 mb-1">
-                <h3 class="text-base sm:text-lg font-extrabold text-white">コールドスタート（初回起動時のわずかな遅延）</h3>
-                <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">数百ms〜数秒</span>
-              </div>
-              <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                しばらくリクエストがない後の初回実行時のみ起動時間がかかります。通常の社内APIでは気にならないケースが多く、シビアな場合は <strong class="text-sky-300">Provisioned Concurrency</strong> や <strong class="text-sky-300">.NET Native AOT</strong> で緩和できます。
-              </p>
-            </div>
-          </div>
-
-          <!-- 注意点 2 -->
-          <div class="bg-slate-900/95 rounded-2xl p-5 border border-slate-700/80 flex items-start gap-4 sm:gap-5">
-            <div class="shrink-0 w-12 h-12 rounded-xl bg-aws/15 text-aws border border-aws/30 flex items-center justify-center text-xl">
+        <div class="space-y-4 my-auto py-2">
+          <!-- 1) タイムアウト上限 -->
+          <div class="bg-[#1e293b]/85 rounded-2xl p-5 border border-slate-700/80 flex items-start gap-4">
+            <div class="shrink-0 w-12 h-12 rounded-xl bg-aws/15 text-aws border border-aws/35 flex items-center justify-center text-xl">
               <i class="fa-solid fa-stopwatch"></i>
             </div>
             <div class="flex-1">
-              <div class="flex flex-wrap items-center gap-2 mb-1">
-                <h3 class="text-base sm:text-lg font-extrabold text-white">タイムアウト制限</h3>
-                <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-aws/15 text-aws border border-aws/30">API Gateway 最大29秒 / Lambda 最大15分</span>
+              <div class="flex flex-wrap items-center gap-2 mb-1.5">
+                <h3 class="text-base sm:text-lg font-extrabold text-white">1. タイムアウト上限</h3>
+                <span class="text-[11px] font-bold px-2.5 py-0.5 rounded bg-aws/15 text-aws border border-aws/35">API Gateway 最大29秒 / Lambda 最大15分</span>
               </div>
               <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                同期APIレスポンスは29秒以内に返す必要があります。時間がかかる集計やファイル変換などは、<strong class="text-aws">SQS等を使った非同期処理</strong>に分けるのが定石です。
+                同期APIレスポンスは29秒以内に返す必要があります。<strong class="text-aws">対策：</strong>重い集計やファイル生成などの長時間処理は、SQS等を挟んで非同期処理に切り出します。
               </p>
             </div>
           </div>
 
-          <!-- 注意点 3 -->
-          <div class="bg-slate-900/95 rounded-2xl p-5 border border-slate-700/80 flex items-start gap-4 sm:gap-5">
-            <div class="shrink-0 w-12 h-12 rounded-xl bg-indigo-500/15 text-indigo-400 border border-indigo-500/30 flex items-center justify-center text-xl">
+          <!-- 2) コールドスタート -->
+          <div class="bg-[#1e293b]/85 rounded-2xl p-5 border border-slate-700/80 flex items-start gap-4">
+            <div class="shrink-0 w-12 h-12 rounded-xl bg-cyan/15 text-cyan border border-cyan/35 flex items-center justify-center text-xl">
+              <i class="fa-solid fa-snowflake"></i>
+            </div>
+            <div class="flex-1">
+              <div class="flex flex-wrap items-center gap-2 mb-1.5">
+                <h3 class="text-base sm:text-lg font-extrabold text-white">2. コールドスタート（初回起動時のわずかな遅延）</h3>
+                <span class="text-[11px] font-bold px-2.5 py-0.5 rounded bg-cyan/15 text-cyan border border-cyan/35">数百ms〜数秒</span>
+              </div>
+              <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                アクセスがない状態からの初回呼び出し時のみ起動時間がかかります。<strong class="text-cyan">対策：</strong>社内ツールなら実用上許容範囲。シビアなAPIのみ Provisioned Concurrency で常時待機させます。
+              </p>
+            </div>
+          </div>
+
+          <!-- 3) ステートレス設計 -->
+          <div class="bg-[#1e293b]/85 rounded-2xl p-5 border border-slate-700/80 flex items-start gap-4">
+            <div class="shrink-0 w-12 h-12 rounded-xl bg-purple/15 text-purple border border-purple/35 flex items-center justify-center text-xl">
               <i class="fa-solid fa-box-open"></i>
             </div>
             <div class="flex-1">
-              <div class="flex flex-wrap items-center gap-2 mb-1">
-                <h3 class="text-base sm:text-lg font-extrabold text-white">ステートレス設計が基本</h3>
-                <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">ローカル永続保存不可</span>
+              <div class="flex flex-wrap items-center gap-2 mb-1.5">
+                <h3 class="text-base sm:text-lg font-extrabold text-white">3. ステートレス設計（ローカル永続保存不可）</h3>
+                <span class="text-[11px] font-bold px-2.5 py-0.5 rounded bg-purple/15 text-purple border border-purple/35">実行環境は使い捨て</span>
               </div>
               <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                実行コンテナは使い捨てのため、ローカルディスクやメモリにデータを残せません。永続化や状態共有は必ず <strong class="text-indigo-300">S3 や DB</strong> を使います。
+                コンテナは処理後に破棄されるため、ローカルディスクやメモリにデータを保持できません。<strong class="text-purple">対策：</strong>ファイルは Amazon S3、状態やデータは RDS / DynamoDB へ保存します。
               </p>
             </div>
           </div>
@@ -617,17 +856,17 @@
       </section>
 
       <!-- =========================================================
-           SLIDE 8: 使い分けの目安（EC2とサーバーレスの共存）
+           SLIDE 9: 使い分けの目安とまとめ（EC2との共存戦略）
       ========================================================== -->
-      <section class="slide flex-col justify-between h-full w-full p-6 sm:p-9 md:p-11 bg-[#0B1120] overflow-y-auto" data-title="使い分けの目安（まとめ）">
+      <section class="slide flex-col justify-between h-full w-full p-5 sm:p-8 md:p-10 bg-[#0f172a] overflow-y-auto" data-title="9. 使い分けの目安とまとめ">
         <div>
-          <span class="text-xs font-bold uppercase tracking-widest text-sky-400">07 / Coexistence &amp; Summary</span>
-          <h2 class="text-2xl sm:text-3xl font-black text-white mt-1">使い分けの目安：EC2とサーバーレスの共存</h2>
+          <span class="text-xs font-bold uppercase tracking-widest text-emerald">08 / Coexistence &amp; Summary</span>
+          <h2 class="text-xl sm:text-3xl font-black text-white mt-0.5">使い分けの目安とまとめ：EC2 との共存戦略</h2>
         </div>
 
         <!-- 2カラム比較 -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 my-auto py-3">
-          <!-- サーバーレス向き -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 my-auto py-2">
+          <!-- Lambda + API Gateway が向くケース -->
           <div class="rounded-2xl p-6 bg-aws/10 border-2 border-aws/50 flex flex-col">
             <div class="flex items-center gap-3 mb-4">
               <span class="w-10 h-10 rounded-xl bg-aws text-slate-950 flex items-center justify-center text-lg shrink-0">
@@ -635,67 +874,67 @@
               </span>
               <div>
                 <p class="text-[11px] font-bold text-aws uppercase">Recommended</p>
-                <h3 class="text-lg sm:text-xl font-black text-white">サーバーレス（Lambda + APIGW）向き</h3>
+                <h3 class="text-lg font-black text-white">Lambda + API Gateway が向くケース</h3>
               </div>
             </div>
             <ul class="space-y-3 text-xs sm:text-sm text-slate-200">
               <li class="flex items-start gap-2.5">
                 <i class="fa-solid fa-check text-aws mt-1 shrink-0"></i>
-                <span>単機能APIや独立したマイクロサービス</span>
+                <span>軽量な CRUD API・独立したマイクロサービス</span>
               </li>
               <li class="flex items-start gap-2.5">
                 <i class="fa-solid fa-check text-aws mt-1 shrink-0"></i>
-                <span>アクセスに波がある社内API・業務ツール</span>
+                <span>バッチ連携・外部サービスからの Webhook 受信</span>
               </li>
               <li class="flex items-start gap-2.5">
                 <i class="fa-solid fa-check text-aws mt-1 shrink-0"></i>
-                <span>素早く作って、その後の保守負荷を下げたいAPI</span>
+                <span>不定期アクセスの社内ツール（夜間・休日0円）</span>
               </li>
               <li class="flex items-start gap-2.5">
                 <i class="fa-solid fa-check text-aws mt-1 shrink-0"></i>
-                <span>C# / Python 混在チームでの並行開発</span>
+                <span>Python / C# メンバーによる小規模APIの素早い量産</span>
               </li>
             </ul>
           </div>
 
-          <!-- EC2 + FastAPI 向き -->
-          <div class="rounded-2xl p-6 bg-slate-900/90 border border-slate-700 flex flex-col">
+          <!-- EC2 + FastAPI を残すべきケース -->
+          <div class="rounded-2xl p-6 bg-[#1e293b]/85 border border-slate-700 flex flex-col">
             <div class="flex items-center gap-3 mb-4">
-              <span class="w-10 h-10 rounded-xl bg-slate-800 text-sky-400 border border-slate-700 flex items-center justify-center text-lg shrink-0">
+              <span class="w-10 h-10 rounded-xl bg-[#0f172a] text-cyan border border-slate-700 flex items-center justify-center text-lg shrink-0">
                 <i class="fa-solid fa-server"></i>
               </span>
               <div>
                 <p class="text-[11px] font-bold text-slate-400 uppercase">Keep on EC2</p>
-                <h3 class="text-lg sm:text-xl font-black text-white">現状の EC2 + FastAPI 向き</h3>
+                <h3 class="text-lg font-black text-white">EC2 + FastAPI を残すべきケース</h3>
               </div>
             </div>
             <ul class="space-y-3 text-xs sm:text-sm text-slate-300">
               <li class="flex items-start gap-2.5">
-                <i class="fa-solid fa-check text-sky-400 mt-1 shrink-0"></i>
-                <span>29秒を超える重い同期処理</span>
+                <i class="fa-solid fa-check text-cyan mt-1 shrink-0"></i>
+                <span>24時間コンスタントに高トラフィックが続くAPI</span>
               </li>
               <li class="flex items-start gap-2.5">
-                <i class="fa-solid fa-check text-sky-400 mt-1 shrink-0"></i>
-                <span>24時間コンスタントに高トラフィックがあるAPI</span>
+                <i class="fa-solid fa-check text-cyan mt-1 shrink-0"></i>
+                <span>WebSocket や長時間コネクション維持が必要な処理</span>
               </li>
               <li class="flex items-start gap-2.5">
-                <i class="fa-solid fa-check text-sky-400 mt-1 shrink-0"></i>
-                <span>WebSocketの常時接続やローカル状態保持が必要な処理</span>
+                <i class="fa-solid fa-check text-cyan mt-1 shrink-0"></i>
+                <span>重い機械学習（ML）モデルの常駐メモリ利用</span>
               </li>
             </ul>
           </div>
         </div>
 
-        <!-- 締めの一言 -->
-        <div class="bg-gradient-to-r from-slate-800 via-slate-800 to-slate-900 border border-slate-700 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <!-- 結論バナー -->
+        <div class="bg-gradient-to-r from-[#1e293b] via-[#1e293b] to-slate-900 border border-emerald/40 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div class="flex items-center gap-3.5">
-            <div class="w-10 h-10 rounded-xl bg-aws text-slate-950 flex items-center justify-center text-xl shrink-0">
+            <div class="w-11 h-11 rounded-xl bg-emerald text-slate-950 flex items-center justify-center text-xl shrink-0">
               <i class="fa-solid fa-rocket"></i>
             </div>
             <div>
-              <p class="text-[11px] font-bold text-aws uppercase tracking-wider">Next Step</p>
-              <p class="text-sm sm:text-base font-extrabold text-white">
-                すべてを置き換えるのではなく、まずは小規模な新規APIからサーバーレスを試して「開発のラクさ」を体感しましょう！
+              <p class="text-[11px] font-bold text-emerald uppercase tracking-wider">Conclusion / Next Action</p>
+              <p class="text-sm sm:text-base font-black text-white">
+                すべてを移行するのではなく、まずは次の小さなAPIから「インフラ管理ゼロの快適さ」を体験しよう！
               </p>
             </div>
           </div>
@@ -708,31 +947,30 @@
     </div>
   </main>
 
-  <!-- 下部コントロールバー -->
+  <!-- 下部ナビゲーションバー -->
   <footer class="w-full max-w-6xl px-4 pb-3 pt-1 flex flex-col gap-2">
     <!-- プログレスバー -->
     <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
-      <div id="progress-bar" class="h-full bg-gradient-to-r from-sky-400 to-aws transition-all duration-300 ease-out" style="width: 12.5%;"></div>
+      <div id="progress-bar" class="h-full bg-gradient-to-r from-cyan via-aws to-emerald transition-all duration-300 ease-out" style="width: 11.11%;"></div>
     </div>
 
-    <!-- ナビゲーションボタン群 -->
     <div class="flex items-center justify-between text-sm">
       <!-- 左：目次ボタン -->
-      <button onclick="toggleToc(true)" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-200 hover:bg-slate-800 hover:text-aws font-semibold transition-colors">
+      <button onclick="toggleToc(true)" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#0f172a] border border-slate-700 text-slate-200 hover:bg-[#1e293b] hover:text-cyan font-semibold transition-colors">
         <i class="fa-solid fa-list-ul"></i>
         <span class="hidden sm:inline">目次</span>
       </button>
 
       <!-- 中央：スライド番号 -->
-      <div class="flex items-center gap-2 font-mono font-bold text-slate-400 bg-slate-900 px-4 py-1.5 rounded-full border border-slate-700">
+      <div class="flex items-center gap-2 font-mono font-bold text-slate-400 bg-[#0f172a] px-4 py-1.5 rounded-full border border-slate-700">
         <span id="current-num" class="text-aws">1</span>
         <span class="text-slate-600">/</span>
-        <span id="total-num">8</span>
+        <span id="total-num">9</span>
       </div>
 
       <!-- 右：前へ / 次へボタン -->
       <div class="flex items-center gap-2">
-        <button id="btn-prev" onclick="prevSlide()" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-200 hover:bg-slate-800 disabled:opacity-35 disabled:cursor-not-allowed font-bold transition-colors">
+        <button id="btn-prev" onclick="prevSlide()" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0f172a] border border-slate-700 text-slate-200 hover:bg-[#1e293b] disabled:opacity-35 disabled:cursor-not-allowed font-bold transition-colors">
           <i class="fa-solid fa-chevron-left text-xs"></i>
           <span>前へ</span>
         </button>
@@ -745,11 +983,11 @@
   </footer>
 
   <!-- 目次モーダル -->
-  <div id="toc-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 backdrop-blur-xs p-4" onclick="if(event.target === this) toggleToc(false)">
-    <div class="bg-slate-900 w-full max-w-md rounded-2xl shadow-2xl border border-slate-700 overflow-hidden">
+  <div id="toc-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/75 backdrop-blur-xs p-4" onclick="if(event.target === this) toggleToc(false)">
+    <div class="bg-[#0f172a] w-full max-w-md rounded-2xl shadow-2xl border border-slate-700 overflow-hidden">
       <div class="flex items-center justify-between px-5 py-4 border-b border-slate-800">
         <h3 class="font-black text-white flex items-center gap-2">
-          <i class="fa-solid fa-list-ul text-aws"></i> スライド一覧（目次）
+          <i class="fa-solid fa-list-ul text-cyan"></i> スライド一覧（全9枚）
         </h3>
         <button onclick="toggleToc(false)" class="w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 flex items-center justify-center transition-colors">
           <i class="fa-solid fa-xmark"></i>
@@ -762,12 +1000,12 @@
   </div>
 
   <script>
-    // スライド状態管理
+    // スライド基本状態
     const slides = Array.from(document.querySelectorAll('.slide'));
     const totalSlides = slides.length;
     let currentSlide = 0;
 
-    // UI要素の取得
+    // UI要素参照
     const progressBar = document.getElementById('progress-bar');
     const currentNumEl = document.getElementById('current-num');
     const totalNumEl = document.getElementById('total-num');
@@ -779,7 +1017,7 @@
     totalNumEl.textContent = totalSlides;
 
     /**
-     * 目次リストの生成・更新
+     * 目次リストの描画
      */
     function renderToc() {
       tocList.innerHTML = '';
@@ -787,14 +1025,14 @@
         const title = slide.getAttribute('data-title') || `スライド ${index + 1}`;
         const isActive = index === currentSlide;
         const btn = document.createElement('button');
-        btn.className = `w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 text-sm font-bold transition-colors ${
+        btn.className = `w-full text-left px-4 py-2.5 rounded-xl flex items-center gap-3 text-sm font-bold transition-colors ${
           isActive
-            ? 'bg-aws/15 text-aws border border-aws/40'
-            : 'text-slate-300 hover:bg-slate-800'
+            ? 'bg-cyan/15 text-cyan border border-cyan/40'
+            : 'text-slate-300 hover:bg-[#1e293b]'
         }`;
         btn.innerHTML = `
           <span class="w-6 h-6 rounded-md flex items-center justify-center text-xs font-mono shrink-0 ${
-            isActive ? 'bg-aws text-slate-950 font-black' : 'bg-slate-800 text-slate-400'
+            isActive ? 'bg-cyan text-slate-950 font-black' : 'bg-slate-800 text-slate-400'
           }">${index + 1}</span>
           <span class="truncate">${title}</span>
         `;
@@ -807,7 +1045,7 @@
     }
 
     /**
-     * 指定インデックスのスライドを表示
+     * スライド切り替え処理
      */
     function goToSlide(index) {
       if (index < 0 || index >= totalSlides) return;
@@ -816,7 +1054,6 @@
       currentSlide = index;
       slides[currentSlide].classList.add('active');
 
-      // コントロールUIの更新
       currentNumEl.textContent = currentSlide + 1;
       progressBar.style.width = `${((currentSlide + 1) / totalSlides) * 100}%`;
       btnPrev.disabled = currentSlide === 0;
@@ -834,7 +1071,7 @@
     }
 
     /**
-     * 目次モーダルの開閉
+     * 目次モーダル開閉
      */
     function toggleToc(show) {
       if (show) {
@@ -848,7 +1085,67 @@
     }
 
     /**
-     * スライド6：Python / C# コードタブ切り替え
+     * スライド3：インタラクティブ詳細アーキテクチャ解説データ
+     */
+    const archDetails = {
+      apigw: {
+        title: 'Amazon API Gateway',
+        role: 'クライアントからのHTTPSリクエストを受け付け、URLパスやHTTPメソッドに応じて適切なLambda関数へ振り分けます。認証・認可やアクセス制限（スロットリング）も入口で一括制御します。',
+        benefit: 'Nginxの設定ファイル管理やSSL証明書の更新作業が不要になります。認証やCORS設定も共通化できるため、各API側での重複実装が減ります。',
+        btnClass: 'bg-cyan text-slate-950'
+      },
+      lambda: {
+        title: 'AWS Lambda（Python / C#）',
+        role: 'API Gatewayからのイベントを受け取り、登録されたPythonまたはC#の関数コードを実行してレスポンスを返します。リクエスト数に応じて並列実行数を自動スケールします。',
+        benefit: 'OSアップデートやプロセス監視、サーバー再起動が一切不要。API単位で独立デプロイできるため、他メンバーの改修と衝突する心配がなくなります。',
+        btnClass: 'bg-aws text-slate-950'
+      },
+      backend: {
+        title: 'Amazon S3 / RDS・DynamoDB',
+        role: 'ステートレスなLambdaに代わり、ファイル（S3）や構造化データ（RDS / DynamoDB）を安全に永続化します。IAMロール連携により認証情報のハードコードも防げます。',
+        benefit: 'サーバーのローカルディスク容量を気にする必要がなくなり、スケーリング時のデータ同期やバックアップ設計の手間が大幅に軽減されます。',
+        btnClass: 'bg-emerald text-slate-950'
+      },
+      cloudwatch: {
+        title: 'Amazon CloudWatch',
+        role: 'API GatewayのアクセスログやLambdaの標準出力（print / Console.WriteLine）、エラー率・実行時間などのメトリクスを自動で収集・可視化します。',
+        benefit: 'サーバーへSSHログインしてログファイルを追う手間がゼロに。エラー発生時の通知設定もAWSコンソールからすぐ構築できます。',
+        btnClass: 'bg-purple text-white'
+      }
+    };
+
+    /**
+     * スライド3：アーキテクチャノード選択処理
+     */
+    function selectArchNode(key) {
+      const data = archDetails[key];
+      if (!data) return;
+
+      // SVGノードのハイライト切り替え
+      Object.keys(archDetails).forEach((k) => {
+        const nodeEl = document.getElementById(`arch-node-${k}`);
+        const btnEl = document.getElementById(`arch-btn-${k}`);
+        if (nodeEl) {
+          if (k === key) nodeEl.classList.add('selected');
+          else nodeEl.classList.remove('selected');
+        }
+        if (btnEl) {
+          if (k === key) {
+            btnEl.className = `px-3 py-1 rounded-lg text-xs font-bold transition-colors ${archDetails[k].btnClass}`;
+          } else {
+            btnEl.className = 'px-3 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition-colors';
+          }
+        }
+      });
+
+      // 解説パネルの更新
+      document.getElementById('arch-detail-title').textContent = data.title;
+      document.getElementById('arch-detail-role').textContent = data.role;
+      document.getElementById('arch-detail-benefit').textContent = data.benefit;
+    }
+
+    /**
+     * スライド7：Python / C# コードタブ切り替え
      */
     function switchCodeTab(lang) {
       const tabPy = document.getElementById('tab-python');
@@ -857,12 +1154,12 @@
       const panelCs = document.getElementById('panel-csharp');
 
       if (lang === 'python') {
-        tabPy.className = 'px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all bg-sky-500 text-slate-950 shadow-sm flex items-center gap-2';
+        tabPy.className = 'px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all bg-cyan text-slate-950 shadow-sm flex items-center gap-2';
         tabCs.className = 'px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all text-slate-300 hover:text-white flex items-center gap-2';
         panelPy.classList.remove('hidden');
         panelCs.classList.add('hidden');
       } else {
-        tabCs.className = 'px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all bg-aws text-slate-950 shadow-sm flex items-center gap-2';
+        tabCs.className = 'px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all bg-purple text-white shadow-sm flex items-center gap-2';
         tabPy.className = 'px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all text-slate-300 hover:text-white flex items-center gap-2';
         panelCs.classList.remove('hidden');
         panelPy.classList.add('hidden');
@@ -883,7 +1180,7 @@
       try {
         document.execCommand('copy');
         const originalHtml = buttonEl.innerHTML;
-        buttonEl.innerHTML = '<i class="fa-solid fa-check text-emerald-400 mr-1"></i>コピー完了';
+        buttonEl.innerHTML = '<i class="fa-solid fa-check text-emerald mr-1"></i>コピー完了';
         setTimeout(() => {
           buttonEl.innerHTML = originalHtml;
         }, 1500);
@@ -911,7 +1208,7 @@
       }
     });
 
-    // タッチスワイプ操作（モバイル・タブレット対応）
+    // タッチスワイプ操作
     let touchStartX = 0;
     const stage = document.getElementById('slide-stage');
     stage.addEventListener('touchstart', (e) => {
@@ -928,6 +1225,7 @@
 
     // 初期化
     goToSlide(0);
+    selectArchNode('apigw');
   </script>
 </body>
 </html>
